@@ -7,19 +7,8 @@ CLASS zcl_rgp_abap_course_basics DEFINITION
 
     INTERFACES if_oo_adt_classrun .
     INTERFACES zif_abap_course_basics .
-
-
-  PROTECTED SECTION.
-  PRIVATE SECTION.
-    CONSTANTS: c_operator_add   TYPE c VALUE '+',
-               c_operator_sub   TYPE c VALUE '-',
-               c_operator_mul   TYPE c VALUE '*',
-               c_operator_div   TYPE c VALUE '/',
-               c_invalid_number TYPE i VALUE 0.
-
-    DATA: result_message TYPE string. " Standard string attribute to hold messages
-    DATA: result_validation TYPE abap_boolean.
-    METHODS validate_input
+* Method validate_input is declared in Public section due to be accessed by Test Cases
+    METHODS validate_calculator_input
       IMPORTING
         iv_first_number  TYPE i
         iv_second_number TYPE i
@@ -39,6 +28,17 @@ CLASS zcl_rgp_abap_course_basics DEFINITION
         iv_word_input  TYPE string
       EXPORTING
         iv_input_valid TYPE abap_bool.
+  PRIVATE SECTION.
+    CONSTANTS: c_operator_add   TYPE c VALUE '+',
+               c_operator_sub   TYPE c VALUE '-',
+               c_operator_mul   TYPE c VALUE '*',
+               c_operator_div   TYPE c VALUE '/',
+               c_invalid_number TYPE i VALUE 0.
+
+    DATA: result_message TYPE string. " Standard string attribute to hold messages
+    DATA: result_validation TYPE abap_boolean.
+
+
 
     TYPES: BEGIN OF lts_travel_id,
              travel_id TYPE /dmo/travel_id,
@@ -75,17 +75,18 @@ CLASS zcl_rgp_abap_course_basics IMPLEMENTATION.
     DATA lv_result TYPE i.
 
     " Call the validation method first
-    CALL METHOD me->validate_input
-      EXPORTING
-        iv_first_number  = lv_first_number
-        iv_second_number = lv_second_number
-        iv_operator      = lv_operator
-      IMPORTING
-        ev_message       = result_message.  " Get the validation message
+    me->validate_calculator_input(
+     EXPORTING
+       iv_first_number  = lv_first_number
+       iv_second_number = lv_second_number
+       iv_operator      = lv_operator
+     IMPORTING
+       ev_message       = result_message ).  " Get the validation message
 
     IF result_message IS NOT INITIAL.
       " Validation failed, output the error message
-      out->write( result_message ).
+      out->write( |Error in calculator input { result_message } | ).
+      out->write( '--------------------------------------------------------------------' ).
     ELSE.
       " Validation passed, perform the calculation
       lv_result = me->zif_abap_course_basics~calculator(
@@ -94,25 +95,29 @@ CLASS zcl_rgp_abap_course_basics IMPLEMENTATION.
             iv_second_number = lv_second_number
             iv_operator      = lv_operator
         ).
+
       out->write( 'Print result for method calculator' ).
       out->write( lv_result ).  " Output the result
+      out->write( '--------------------------------------------------------------------' ).
     ENDIF.
 
 
     " Execution of method date_parsing
-    DATA lv_input_string_date TYPE string VALUE '1 4 2017'.
+    DATA lv_input_string_date TYPE string VALUE '28 02 2025'.
     DATA lv_input_valid       TYPE abap_bool.
     DATA lv_date_result      TYPE dats.
 
 *  " Call the validate_date_parsing method first
-    CALL METHOD me->validate_date_parsing
-      EXPORTING
-        iv_input_string_date = lv_input_string_date
-      IMPORTING
-        iv_input_valid       = lv_input_valid.
+    me->validate_date_parsing(
+       EXPORTING
+         iv_input_string_date = lv_input_string_date
+       IMPORTING
+         iv_input_valid       = lv_input_valid ).
 
     IF lv_input_valid = abap_false.
-      out->write( 'The input is not valid!' ).
+
+      out->write( 'The input is not valid for method date_parsing!' ).
+      out->write( '--------------------------------------------------------------------' ).
     ELSE.
       lv_date_result = me->zif_abap_course_basics~date_parsing(
         EXPORTING
@@ -120,6 +125,7 @@ CLASS zcl_rgp_abap_course_basics IMPLEMENTATION.
       ).
       out->write( 'Print result for method date_parsing' ).
       out->write( lv_date_result ).
+      out->write( '--------------------------------------------------------------------' ).
     ENDIF.
     " Execution of method hello_world
     DATA lv_name TYPE string VALUE 'Ralitsa'.
@@ -131,20 +137,22 @@ CLASS zcl_rgp_abap_course_basics IMPLEMENTATION.
     ).
     out->write( 'Print result for method hello_world' ).
     out->write( lv_result_message ).
+    out->write( '--------------------------------------------------------------------' ).
 
 *" Execution of method scrabble_score.
-    DATA lv_word TYPE string VALUE 'Rali'.
-    DATA lv_input_validation TYPE abap_bool.
+    DATA lv_word TYPE string VALUE ''.
+    DATA lv_input_validation TYPE abap_bool VALUE 'X'.
     DATA lv_result_validation_message TYPE i.
 
-    CALL METHOD me->validate_input_scrabble_score
+    me->validate_input_scrabble_score(
       EXPORTING
-        iv_word_input  = lv_word
+        iv_word_input = lv_word
       IMPORTING
-        iv_input_valid = lv_input_validation.
+        iv_input_valid = lv_input_validation ).
 
-    IF lv_input_valid = abap_false.
-      out->write( 'The input is not valid!' ).
+    IF lv_input_validation = abap_false.
+      out->write( 'The input is not valid for method scrabble_score!' ).
+      out->write( '--------------------------------------------------------------------' ).
     ELSE.
       lv_result_validation_message =  me->zif_abap_course_basics~scrabble_score(
       EXPORTING
@@ -152,6 +160,7 @@ CLASS zcl_rgp_abap_course_basics IMPLEMENTATION.
       ).
       out->write( 'Print result for method scrabble_score' ).
       out->write( lv_result_validation_message ).
+      out->write( '--------------------------------------------------------------------' ).
     ENDIF.
 
 *" Execution of method zif_abap_course_basics~get_current_date_time.
@@ -167,7 +176,7 @@ CLASS zcl_rgp_abap_course_basics IMPLEMENTATION.
     lv_result_message_fizz_buzz = me->zif_abap_course_basics~fizz_buzz(  ).
     out->write( 'Print result for method fizz_buzz' ).
     out->write( lv_result_message_fizz_buzz ).
-
+    out->write( '--------------------------------------------------------------------' ).
     me->zif_abap_course_basics~internal_tables(
     IMPORTING
     et_travel_ids_task7_1 = lt_result_travel_ids_task1
@@ -182,7 +191,7 @@ CLASS zcl_rgp_abap_course_basics IMPLEMENTATION.
     IMPORTING
     lt_sorted_table = mt_travel_data
     ).
-
+    out->write( '--------------------------------------------------------------------' ).
     out->write( 'Method should export a table containing all travels(TRAVEL_ID) for agency ( AGENCY_ID) 070001 with booking fee of 20 JPY (BOOKING_FEE CURRENCY_CODE)' ).
     out->write( lt_result_travel_ids_task1 ).
     out->write( '--------------------------------------------------' ).
@@ -204,16 +213,16 @@ CLASS zcl_rgp_abap_course_basics IMPLEMENTATION.
      et_travel_ids_task8_2 = lt_result_travel_ids_task2
      et_travel_ids_task8_3 = lt_result_travel_ids_task3
      ).
-
+    out->write( '--------------------------------------------------------------------' ).
     out->write( 'Method should export a table containing all travels(TRAVEL_ID) for agency ( AGENCY_ID) 070001 with booking fee of 20 JPY (BOOKING_FEE CURRENCY_CODE)' ).
     out->write( lt_result_travel_ids_task1 ).
 
 
-
+    out->write( '--------------------------------------------------------------------' ).
     out->write( 'Method should export a table containing all travels with a price (TOTAL_PRICE) higher than 2000 USD.)' ).
     out->write( lt_result_travel_ids_task2 ).
 
-
+    out->write( '--------------------------------------------------------------------' ).
     out->write( 'Method should Export a table containing the TRAVEL_ID of the first ten rows to screen.)' ).
     out->write( lt_result_travel_ids_task3 ).
 
@@ -232,55 +241,80 @@ CLASS zcl_rgp_abap_course_basics IMPLEMENTATION.
     SPLIT iv_input_string_date AT space INTO TABLE lt_parts.
 
     IF lines( lt_parts ) = 3.
+
       lv_day   = lt_parts[ 1 ].
       lv_month = lt_parts[ 2 ].
       lv_year  = lt_parts[ 3 ].
 
       iv_input_valid = abap_true.
     ENDIF.
+    IF iv_input_valid = abap_true.
 
-    " Validate day
-    IF lv_day CN '0123456789' OR lv_day < '1' OR lv_day > '31'.
-      iv_input_valid = abap_false.
-    ELSE.
-      iv_input_valid = abap_true.
-    ENDIF.
+      DATA: lv_day_number   TYPE i,
+            lv_month_number TYPE i,
+            lt_valid_months TYPE TABLE OF string,
+            lv_valid        TYPE string.
 
-    " Validate month (numeric or alphabetic)
-    IF lv_month CN '0123456789'. " Check for alphabetic month
-      IF lv_month CN 'JanuaryFebruaryMarchAprilMayJuneJulyAugustSeptemberOctoberNovemberDecember'.
+      " Populate table with valid month names
+      APPEND 'January' TO lt_valid_months.
+      APPEND 'February' TO lt_valid_months.
+      APPEND 'March' TO lt_valid_months.
+      APPEND 'April' TO lt_valid_months.
+      APPEND 'May' TO lt_valid_months.
+      APPEND 'June' TO lt_valid_months.
+      APPEND 'July' TO lt_valid_months.
+      APPEND 'August' TO lt_valid_months.
+      APPEND 'September' TO lt_valid_months.
+      APPEND 'October' TO lt_valid_months.
+      APPEND 'November' TO lt_valid_months.
+      APPEND 'December' TO lt_valid_months.
+
+      "Validate month
+      " Validate the month
+      READ TABLE lt_valid_months WITH KEY table_line = lv_month INTO lv_valid.
+      IF sy-subrc <> 0.
+        iv_input_valid = abap_false. " Invalid month name
+      ENDIF.
+      " Validate day
+      IF lv_day CA 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.
+
         iv_input_valid = abap_false.
       ELSE.
-        iv_input_valid = abap_true.
+        lv_day_number = lv_day.
+        IF lv_day_number < 1 OR lv_day_number > 31.
+          iv_input_valid = abap_false.
+        ENDIF.
       ENDIF.
-    ELSEIF " Numeric month
-      lv_month < '1' OR lv_month > '12'.
-      iv_input_valid = abap_false.
-    ELSE.
-      iv_input_valid = abap_true.
-    ENDIF.
+      " Validate month (numeric or alphabetic)
+      IF lv_month CN 'JanuaryFebruaryMarchAprilMayJuneJulyAugustSeptemberOctoberNovemberDecember'.
+        lv_month_number = lv_month.
+        IF lv_month_number < 1 OR lv_month_number > 12.
+          iv_input_valid = abap_false.
+        ENDIF.
+      ENDIF.
 
-* Check if the year is leap when date is 29 and month is February
-    IF lv_month = 'February' OR lv_month = 2 OR lv_month = 02.
-      IF lv_day = 29 AND ( lv_year MOD 4 <> 0 OR ( lv_year MOD 100 = 0 AND lv_year MOD 400 <> 0 ) ).
+      IF lv_year CA 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.
+        iv_input_valid = abap_false.
+        " Validate year
+      ELSEIF strlen( lv_year ) <> 4.
         iv_input_valid = abap_false.
       ENDIF.
-      iv_input_valid = abap_false.
-    ELSE.
-      iv_input_valid = abap_true.
-    ENDIF.
 
-    " Validate year
-    IF lv_year CN '0123456789' OR strlen( lv_year ) <> 4.
-      iv_input_valid = abap_false.
+* Check if the year is leap when date is 29 and month is February
+      IF lv_month = 'February' OR lv_month_number = 2 OR lv_month_number = 02.
+        IF lv_day_number = 29 AND NOT ( lv_year MOD 4 = 0 AND ( lv_year MOD 100 <> 0 OR lv_year MOD 400 = 0 ) ).
+          iv_input_valid = abap_false.
+        ENDIF.
+      ENDIF.
+
     ELSE.
-      iv_input_valid = abap_true.
+      iv_input_valid = abap_false.
     ENDIF.
 
   ENDMETHOD.
 
 
-  METHOD validate_input.
+  METHOD validate_calculator_input.
     " Initialize the message to empty
     ev_message = ''.
 
@@ -624,42 +658,44 @@ CLASS zcl_rgp_abap_course_basics IMPLEMENTATION.
 
   METHOD validate_input_scrabble_score.
 
-    IF iv_word_input IS INITIAL.
+
+    IF iv_word_input = ''.
       iv_input_valid = abap_false.
     ELSEIF iv_word_input CA '0123456789'.
       iv_input_valid = abap_false.
     ELSE.
       iv_input_valid = abap_true.
     ENDIF.
+
   ENDMETHOD.
 
   METHOD zif_abap_course_basics~open_sql.
 *The method should export a table containing all travels(TRAVEL_ID)
 *for agency ( AGENCY_ID) 070001 with booking fee of 20 JPY (BOOKING_FEE CURRENCY_CODE)
 
-*    SELECT travel_id
-*      FROM ztravel_rp
-*      WHERE agency_id = '070001'
-*        AND booking_fee = 20
-*        AND currency_code = 'JPY'
-*      INTO TABLE @DATA(lt_result_travel_ids).
-*
-*
-*    LOOP AT lt_result_travel_ids INTO DATA(ls_travel).
-*      APPEND ls_travel-travel_id TO et_travel_ids_task8_1.
-*    ENDLOOP.
-*
-*
+    SELECT travel_id
+      FROM ztravel_rp
+      WHERE agency_id = '070001'
+        AND booking_fee = 20
+        AND currency_code = 'JPY'
+      INTO TABLE @DATA(lt_result_travel_ids).
+
+
+    LOOP AT lt_result_travel_ids INTO DATA(ls_travel).
+      APPEND ls_travel-travel_id TO et_travel_ids_task8_1.
+    ENDLOOP.
+
+
 ****The method should export a table containing all travels with a price (TOTAL_PRICE) higher than 2000 USD. Hint: Currencies are convertible
-*    SELECT travel_id
-*    FROM ztravel_rp
-*    WHERE total_price > 2000 AND currency_code = 'USD'
-*    INTO TABLE @DATA(lt_result_travels).
-*
-*    LOOP AT lt_result_travels INTO DATA(ls_travels).
-*      APPEND ls_travels-travel_id TO et_travel_ids_task8_2.
-*    ENDLOOP.
-*
+    SELECT travel_id
+    FROM ztravel_rp
+    WHERE total_price > 2000 AND currency_code = 'USD'
+    INTO TABLE @DATA(lt_result_travels).
+
+    LOOP AT lt_result_travels INTO DATA(ls_travels).
+      APPEND ls_travels-travel_id TO et_travel_ids_task8_2.
+    ENDLOOP.
+
 **Export a table containing the TRAVEL_ID of the first ten rows to screen.
     SELECT *
     FROM ztravel_rp
@@ -669,9 +705,9 @@ CLASS zcl_rgp_abap_course_basics IMPLEMENTATION.
 
 
     LOOP AT ls_limit_travels INTO DATA(ls_travel_ids).
-     DATA lv_counter TYPE i.
+      DATA lv_counter TYPE i.
       IF lv_counter >= 10.
-       APPEND ls_travel_ids-travel_id TO et_travel_ids_task8_3.
+        APPEND ls_travel_ids-travel_id TO et_travel_ids_task8_3.
         lv_counter = lv_counter + 1.
         EXIT.
       ENDIF.
