@@ -26,11 +26,13 @@ CLASS ltcl_ DEFINITION FINAL FOR TESTING
     METHODS test_date_parsing_inval_month FOR TESTING.
     METHODS test_date_parsing_leap_year FOR TESTING.
     METHODS test_date_parsing_no_leap_year FOR TESTING.
+    METHODS test_date_parsing FOR TESTING.
 
 * Test methods scrabble_score
     METHODS test_scrabble_score_val_input FOR TESTING.
     METHODS test_scrabble_score_empty_inpt FOR TESTING.
     METHODS test_scrabble_score_num_input FOR TESTING.
+    METHODS test_scrabble_score FOR TESTING.
 
 
 *Test method fizz_buzz
@@ -38,7 +40,8 @@ CLASS ltcl_ DEFINITION FINAL FOR TESTING
 
     METHODS test_hello_world FOR TESTING.
 
-
+*test method get_current_date_time
+    METHODS test_get_current_date_time FOR TESTING.
 
     METHODS test_task7_agency_booking_jpy FOR TESTING.
     METHODS test_task7_price_higher_usd FOR TESTING.
@@ -47,7 +50,8 @@ CLASS ltcl_ DEFINITION FINAL FOR TESTING
 
     METHODS test_task8_agency_booking_jpy FOR TESTING.
     METHODS test_task8_price_higher_usd FOR TESTING.
-    METHODS test_task8_first_travel_ids FOR TESTING.
+    METHODS test_task8_first_10_travel_ids FOR TESTING.
+    METHODS test_task8_incor_10_travel_ids FOR TESTING.
 
 ENDCLASS.
 
@@ -391,24 +395,24 @@ msg = 'open sql task 8.1 is incorrect.'
 
   ENDMETHOD.
 
-  METHOD test_task8_first_travel_ids.
-TYPES: BEGIN OF lts_travel_id,
+  METHOD test_task8_first_10_travel_ids.
+    TYPES: BEGIN OF lts_travel_id,
              travel_id TYPE /dmo/travel_id,
            END OF lts_travel_id.
-
+    TYPES tty_ztravel_rp TYPE TABLE OF ztravel_rp.
     DATA lt_result_travel_ids_task8 TYPE TABLE OF  lts_travel_id.
     cut->zif_abap_course_basics~open_sql(
      IMPORTING
      et_travel_ids_task8_3 = lt_result_travel_ids_task8
      ).
-           cl_abap_unit_assert=>assert_initial(
-      act = lt_result_travel_ids_task8
-      msg = 'open sql task 8.3 is incorrect.'
-    ).
+    cl_abap_unit_assert=>assert_not_initial(
+act = lt_result_travel_ids_task8
+msg = 'open sql task 8.3 is incorrect.'
+).
   ENDMETHOD.
 
   METHOD test_task8_price_higher_usd.
-TYPES: BEGIN OF lts_travel_id,
+    TYPES: BEGIN OF lts_travel_id,
              travel_id TYPE /dmo/travel_id,
            END OF lts_travel_id.
 
@@ -418,10 +422,10 @@ TYPES: BEGIN OF lts_travel_id,
      IMPORTING
      et_travel_ids_task8_2 = lt_result_travel_ids_task8
      ).
-          cl_abap_unit_assert=>assert_not_initial(
-      act = lt_result_travel_ids_task8
-      msg = 'open sql task 8.2 is incorrect.'
-    ).
+    cl_abap_unit_assert=>assert_not_initial(
+act = lt_result_travel_ids_task8
+msg = 'open sql task 8.2 is incorrect.'
+).
   ENDMETHOD.
 
   METHOD test_scrabble_score_empty_inpt.
@@ -470,5 +474,140 @@ TYPES: BEGIN OF lts_travel_id,
                                         exp = '20250415'
                                          ).
   ENDMETHOD.
+
+  METHOD test_get_current_date_time.
+    DATA lv_result TYPE timestampl.
+
+    " Act: Call the method under test.
+    lv_result = cut->zif_abap_course_basics~get_current_date_time( ).
+
+    " Assert:  Check that the result is not initial.  We can't predict the exact timestamp,
+    "          but we can be sure it's not the initial value.
+    cl_abap_unit_assert=>assert_not_initial(
+      act = lv_result
+      msg = 'Test Failed: get_current_date_time should return a non-initial timestamp.'
+    ).
+  ENDMETHOD.
+
+  METHOD test_scrabble_score.
+    " Arrange: Define test data.  Include various cases: empty string,
+    "          lowercase, uppercase, mixed case, and a word with repeated letters.
+    TYPES: BEGIN OF lt_test_cases_input,
+             lv_input          TYPE string,
+             lv_expected_score TYPE i,
+           END OF lt_test_cases_input.
+    DATA lt_test_cases TYPE TABLE OF lt_test_cases_input.
+
+    APPEND VALUE #( lv_input = '' lv_expected_score = 0 ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = 'hello' lv_expected_score = 52 ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = 'Hello' lv_expected_score = 52 ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = 'Rali' lv_expected_score = 40 ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = 'abcdefghijklmnopqrstuvwxyz' lv_expected_score = 351 ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '12345' lv_expected_score = 0 ) TO lt_test_cases. "Added test case to cover the ELSE part of the IF statement
+
+
+    " Act & Assert:  Loop through test cases and assert the result for each.
+    LOOP AT lt_test_cases INTO DATA(test_case).
+
+      DATA lv_result TYPE i.
+
+      lv_result = cut->zif_abap_course_basics~scrabble_score( iv_word = test_case-lv_input ).
+
+      cl_abap_unit_assert=>assert_equals(
+      act = lv_result
+      exp = test_case-lv_expected_score
+      msg = |Test Failed: scrabble_score with input '{ test_case-lv_input }' should return '{ test_case-lv_expected_score }'.| ).
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD test_task8_incor_10_travel_ids.
+    TYPES: BEGIN OF lts_travel_id,
+             travel_id TYPE /dmo/travel_id,
+           END OF lts_travel_id.
+
+    DATA lt_result_travel_ids_task8 TYPE TABLE OF  lts_travel_id.
+
+    DATA lt_incorrect_count_ids_task8_3 TYPE TABLE OF  lts_travel_id.
+
+    cut->zif_abap_course_basics~open_sql(
+     IMPORTING
+      et_travel_ids_task8_3 = lt_result_travel_ids_task8
+      ).
+
+    DATA(lv_rows_method_table) = lines( lt_result_travel_ids_task8 ).
+    DATA(lv_rows_test_table) = lines( lt_incorrect_count_ids_task8_3 ).
+
+    DATA is_differ TYPE abap_bool VALUE 'X'.
+    IF lv_rows_method_table > lv_rows_test_table.
+      is_differ = abap_false.
+    ENDIF.
+    cl_abap_unit_assert=>assert_false(
+     act = is_differ
+     msg = 'Test Failed: The rows of test table are equal to method table.'
+   ).
+
+  ENDMETHOD.
+  METHOD test_date_parsing.
+    " Arrange: Define test data with various date formats.
+    TYPES: BEGIN OF lt_test_cases_input,
+             lv_input           TYPE string,
+             lv_expected_format TYPE i,
+           END OF lt_test_cases_input.
+    DATA lt_test_cases TYPE TABLE OF lt_test_cases_input.
+
+    " Test with month names (all lowercase)
+    APPEND VALUE #( lv_input = '01 january 2023' lv_expected_format = '20230101' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '15 february 2024' lv_expected_format = '20240215' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '28 march 2025' lv_expected_format = '20250328' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '05 april 2026' lv_expected_format = '20260405' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '10 may 2027' lv_expected_format = '20270510' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '22 june 2028' lv_expected_format = '20280622' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '03 july 2029' lv_expected_format = '20290703' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '18 august 2030' lv_expected_format = '20300818' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '01 september 2031' lv_expected_format = '20310901' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '12 october 2032' lv_expected_format = '20321012' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '25 november 2033' lv_expected_format = '20331125' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '31 december 2034' lv_expected_format = '20341231' ) TO lt_test_cases.
+
+    "test with month number
+    APPEND VALUE #( lv_input = '01 01 2023' lv_expected_format = '20230101' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '15 02 2024' lv_expected_format = '20240215' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '28 03 2025' lv_expected_format = '20250328' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '05 04 2026' lv_expected_format = '20260405' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '10 05 2027' lv_expected_format = '20270510' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '22 06 2028' lv_expected_format = '20280622' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '03 07 2029' lv_expected_format = '20290703' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '18 08 2030' lv_expected_format = '20300818' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '01 09 2031' lv_expected_format = '20310901' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '12 10 2032' lv_expected_format = '20321012' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '25 11 2033' lv_expected_format = '20331125' ) TO lt_test_cases..
+    APPEND VALUE #( lv_input = '31 12 2034' lv_expected_format = '20341231' ) TO lt_test_cases.
+
+
+    " Test with month number without leading zero
+    APPEND VALUE #( lv_input = '01 1 2023' lv_expected_format = '20230101' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '15 2 2024' lv_expected_format = '20240215' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '28 3 2025' lv_expected_format = '20250328' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '05 4 2026' lv_expected_format = '20260405' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '10 5 2027' lv_expected_format = '20270510' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '22 6 2028' lv_expected_format = '20280622' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '03 7 2029' lv_expected_format = '20290703' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '18 8 2030' lv_expected_format = '20300818' ) TO lt_test_cases.
+    APPEND VALUE #( lv_input = '01 9 2031' lv_expected_format = '20310901' ) TO lt_test_cases.
+
+
+    " Act & Assert:  Loop through test cases and assert the result for each.
+    LOOP AT lt_test_cases INTO DATA(test_case).
+      DATA lv_result TYPE string.
+      lv_result = cut->zif_abap_course_basics~date_parsing( iv_date = test_case-lv_input ).
+      cl_abap_unit_assert=>assert_equals(
+        act = lv_result
+        exp = test_case-lv_expected_format
+        msg = |Test Failed: date_parsing with input '{ test_case-lv_input }' should return '{ test_case-lv_expected_format }'.|
+      ).
+    ENDLOOP.
+  ENDMETHOD.
+
+
 
 ENDCLASS.

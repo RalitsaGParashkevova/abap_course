@@ -28,6 +28,8 @@ CLASS zcl_rgp_abap_course_basics DEFINITION
         iv_word_input  TYPE string
       EXPORTING
         iv_input_valid TYPE abap_bool.
+
+
   PRIVATE SECTION.
     CONSTANTS: c_operator_add   TYPE c VALUE '+',
                c_operator_sub   TYPE c VALUE '-',
@@ -38,9 +40,7 @@ CLASS zcl_rgp_abap_course_basics DEFINITION
     DATA: result_message TYPE string. " Standard string attribute to hold messages
     DATA: result_validation TYPE abap_boolean.
 
-
-
-    TYPES: BEGIN OF lts_travel_id,
+   TYPES: BEGIN OF lts_travel_id,
              travel_id TYPE /dmo/travel_id,
            END OF lts_travel_id.
 
@@ -52,12 +52,13 @@ CLASS zcl_rgp_abap_course_basics DEFINITION
 
     TYPES tty_ztravel_rp TYPE TABLE OF ztravel_rp.
     DATA: mt_travel_data TYPE tty_ztravel_rp.
-
     METHODS print_result_table_task7
 
 *IMPORTING lt_internal_table TYPE tty_ztravel_rp
       EXPORTING lt_sorted_table TYPE tty_ztravel_rp.
-
+ DATA lt_result_travel_ids_task8_1 TYPE TABLE OF  lts_travel_id.
+    DATA lt_result_travel_ids_task8_2  TYPE TABLE OF  lts_travel_id.
+    DATA lt_result_travel_ids_task8_3  TYPE TABLE OF lts_travel_id.
 
 
 ENDCLASS.
@@ -209,22 +210,22 @@ CLASS zcl_rgp_abap_course_basics IMPLEMENTATION.
 ** Print results task 8
     me->zif_abap_course_basics~open_sql(
     IMPORTING
-     et_travel_ids_task8_1 = lt_result_travel_ids_task1
-     et_travel_ids_task8_2 = lt_result_travel_ids_task2
-     et_travel_ids_task8_3 = lt_result_travel_ids_task3
+     et_travel_ids_task8_1 = lt_result_travel_ids_task8_1
+     et_travel_ids_task8_2 = lt_result_travel_ids_task8_2
+     et_travel_ids_task8_3 = lt_result_travel_ids_task8_3
      ).
     out->write( '--------------------------------------------------------------------' ).
-    out->write( 'Method should export a table containing all travels(TRAVEL_ID) for agency ( AGENCY_ID) 070001 with booking fee of 20 JPY (BOOKING_FEE CURRENCY_CODE)' ).
-    out->write( lt_result_travel_ids_task1 ).
+    out->write( 'Task 8_1 Method should export a table containing all travels(TRAVEL_ID) for agency ( AGENCY_ID) 070001 with booking fee of 20 JPY (BOOKING_FEE CURRENCY_CODE)' ).
+    out->write( lt_result_travel_ids_task8_1 ).
 
 
     out->write( '--------------------------------------------------------------------' ).
-    out->write( 'Method should export a table containing all travels with a price (TOTAL_PRICE) higher than 2000 USD.)' ).
-    out->write( lt_result_travel_ids_task2 ).
+    out->write( 'Task 8_2 Method should export a table containing all travels with a price (TOTAL_PRICE) higher than 2000 USD.)' ).
+    out->write( lt_result_travel_ids_task8_2 ).
 
     out->write( '--------------------------------------------------------------------' ).
-    out->write( 'Method should Export a table containing the TRAVEL_ID of the first ten rows to screen.)' ).
-    out->write( lt_result_travel_ids_task3 ).
+    out->write( 'Task 8_3 Method should Export a table containing the TRAVEL_ID of the first ten rows to screen.)' ).
+    out->write( lt_result_travel_ids_task8_3 ).
 
   ENDMETHOD.
 
@@ -685,8 +686,8 @@ CLASS zcl_rgp_abap_course_basics IMPLEMENTATION.
       APPEND ls_travel-travel_id TO et_travel_ids_task8_1.
     ENDLOOP.
 
-
-****The method should export a table containing all travels with a price (TOTAL_PRICE) higher than 2000 USD. Hint: Currencies are convertible
+**
+*******The method should export a table containing all travels with a price (TOTAL_PRICE) higher than 2000 USD. Hint: Currencies are convertible
     SELECT travel_id
     FROM ztravel_rp
     WHERE total_price > 2000 AND currency_code = 'USD'
@@ -696,22 +697,21 @@ CLASS zcl_rgp_abap_course_basics IMPLEMENTATION.
       APPEND ls_travels-travel_id TO et_travel_ids_task8_2.
     ENDLOOP.
 
-**Export a table containing the TRAVEL_ID of the first ten rows to screen.
+***Export a table containing the TRAVEL_ID of the first ten rows to screen.
     SELECT *
     FROM ztravel_rp
     INTO TABLE @DATA(ls_limit_travels)
     UP TO 10 ROWS.
 
 
+ DATA: lv_counter TYPE i value 0.
 
     LOOP AT ls_limit_travels INTO DATA(ls_travel_ids).
-      DATA lv_counter TYPE i.
       IF lv_counter >= 10.
-        APPEND ls_travel_ids-travel_id TO et_travel_ids_task8_3.
-        lv_counter = lv_counter + 1.
         EXIT.
       ENDIF.
-
+      APPEND ls_travel_ids-travel_id TO et_travel_ids_task8_3.
+      lv_counter = lv_counter + 1.
 
     ENDLOOP.
 
