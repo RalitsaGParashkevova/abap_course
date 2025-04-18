@@ -4,7 +4,9 @@ CLASS ltcl_ DEFINITION FINAL FOR TESTING
   RISK LEVEL HARMLESS.
 
   PRIVATE SECTION.
+
     DATA cut TYPE REF TO zcl_rgp_abap_course_basics. " Class Under Test
+
     METHODS setup.
 
 *Test methods calculator
@@ -53,6 +55,7 @@ CLASS ltcl_ DEFINITION FINAL FOR TESTING
     METHODS test_task8_first_10_travel_ids FOR TESTING.
     METHODS test_task8_incor_10_travel_ids FOR TESTING.
 
+
 ENDCLASS.
 
 
@@ -60,6 +63,7 @@ CLASS ltcl_ IMPLEMENTATION.
 
   METHOD setup.
     cut = NEW zcl_rgp_abap_course_basics( ).
+
   ENDMETHOD.
 
 
@@ -607,6 +611,7 @@ msg = 'open sql task 8.2 is incorrect.'
       ).
     ENDLOOP.
   ENDMETHOD.
+
 
 
 

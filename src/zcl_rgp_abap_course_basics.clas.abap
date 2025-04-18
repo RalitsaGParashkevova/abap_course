@@ -534,11 +534,9 @@ CLASS zcl_rgp_abap_course_basics IMPLEMENTATION.
     LOOP AT lt_travel INTO DATA(ls_total_price)
 
  WHERE total_price > 2000 AND currency_code = 'USD'.
-      DATA lv_price_int TYPE i.
 
-      lv_price_int = ls_total_price-total_price.
 
-      APPEND lv_price_int TO et_travel_ids_task7_2.
+      APPEND ls_total_price-travel_id TO et_travel_ids_task7_2.
 
     ENDLOOP.
     " 3. Delete all rows of the internal table with prices not in Euro,
