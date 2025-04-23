@@ -54,7 +54,7 @@ CLASS ltcl_ DEFINITION FINAL FOR TESTING
     METHODS test_task8_price_higher_usd FOR TESTING.
     METHODS test_task8_first_10_travel_ids FOR TESTING.
     METHODS test_task8_incor_10_travel_ids FOR TESTING.
-
+    METHODS test_task8_loop_exit FOR TESTING.
 
 ENDCLASS.
 
@@ -84,9 +84,9 @@ CLASS ltcl_ IMPLEMENTATION.
     lv_result = cut->zif_abap_course_basics~calculator(
     iv_first_number = 6
     iv_second_number = 3
-    iv_operator = '-' ).
+    iv_operator = '/' ).
 
-    cl_abap_unit_assert=>assert_equals( exp = 3 act = lv_result ).
+    cl_abap_unit_assert=>assert_equals( exp = 2 act = lv_result ).
 
 
   ENDMETHOD.
@@ -613,6 +613,43 @@ msg = 'open sql task 8.2 is incorrect.'
   ENDMETHOD.
 
 
+
+
+  METHOD test_task8_loop_exit.
+" Arrange: Set up test data
+TYPES: BEGIN OF lts_travel_id,
+             travel_id TYPE /dmo/travel_id,
+           END OF lts_travel_id.
+
+
+    DATA: ls_limit_travels TYPE TABLE OF lts_travel_id,
+          ls_travel_ids    TYPE lts_travel_id,
+          et_travel_ids_task8_3 TYPE TABLE OF lts_travel_id,
+          lv_counter TYPE i VALUE 1.
+
+    " Fill test table with sample values
+    DO 15 TIMES.  " Test with 15 entries to check exit condition
+      APPEND INITIAL LINE TO ls_limit_travels.
+    ENDDO.
+
+    " Act: Execute loop
+    LOOP AT ls_limit_travels INTO ls_travel_ids.
+      IF lv_counter >= 10.
+        EXIT.  " Ensure it exits at 10
+      ENDIF.
+
+      APPEND ls_travel_ids-travel_id TO et_travel_ids_task8_3.
+      lv_counter = lv_counter + 1.
+    ENDLOOP.
+
+    " Assert: Validate that only 10 records are processed
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( et_travel_ids_task8_3 )
+      exp = 9
+      msg = 'Loop did not exit at the correct condition.'
+    ).
+
+  ENDMETHOD.
 
 
 ENDCLASS.

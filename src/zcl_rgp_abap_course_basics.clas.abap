@@ -40,7 +40,7 @@ CLASS zcl_rgp_abap_course_basics DEFINITION
     DATA: result_message TYPE string. " Standard string attribute to hold messages
     DATA: result_validation TYPE abap_boolean.
 
-   TYPES: BEGIN OF lts_travel_id,
+    TYPES: BEGIN OF lts_travel_id,
              travel_id TYPE /dmo/travel_id,
            END OF lts_travel_id.
 
@@ -56,9 +56,16 @@ CLASS zcl_rgp_abap_course_basics DEFINITION
 
 *IMPORTING lt_internal_table TYPE tty_ztravel_rp
       EXPORTING lt_sorted_table TYPE tty_ztravel_rp.
- DATA lt_result_travel_ids_task8_1 TYPE TABLE OF  lts_travel_id.
+    DATA lt_result_travel_ids_task8_1 TYPE TABLE OF  lts_travel_id.
     DATA lt_result_travel_ids_task8_2  TYPE TABLE OF  lts_travel_id.
     DATA lt_result_travel_ids_task8_3  TYPE TABLE OF lts_travel_id.
+
+    METHODS currency_converter
+      IMPORTING
+        iv_currency_type    TYPE /dmo/currency_code
+        iv_curr_total_price TYPE /dmo/total_price
+      EXPORTING
+        ev_currency_to_usd  TYPE p.
 
 
 ENDCLASS.
@@ -520,8 +527,8 @@ CLASS zcl_rgp_abap_course_basics IMPLEMENTATION.
        ORDER BY travel_id ).
     COMMIT WORK AND WAIT.
 
-
-*    " Populate et_travel_ids_task7_1 using LOOP
+*
+**    " Populate et_travel_ids_task7_1 using LOOP
     LOOP AT lt_travel INTO DATA(ls_travel_id)
          WHERE agency_id = '070001'
            AND booking_fee = 20
@@ -529,16 +536,25 @@ CLASS zcl_rgp_abap_course_basics IMPLEMENTATION.
       APPEND ls_travel_id-travel_id TO et_travel_ids_task7_1.
     ENDLOOP.
 
-*
+
 *    " Populate et_travel_ids_task7_2 using LOOP
-    LOOP AT lt_travel INTO DATA(ls_total_price)
+    LOOP AT lt_travel INTO DATA(ls_total_price).
 
- WHERE total_price > 2000 AND currency_code = 'USD'.
+ DATA current_total_price TYPE /dmo/total_price.
 
+      me->currency_converter(
+     EXPORTING
+     iv_currency_type = ls_total_price-currency_code
+     iv_curr_total_price = ls_total_price-total_price
+     IMPORTING
+     ev_currency_to_usd = current_total_price
+).
 
-      APPEND ls_total_price-travel_id TO et_travel_ids_task7_2.
-
+      IF current_total_price > 2000.
+        APPEND ls_total_price-travel_id TO et_travel_ids_task7_2.
+      ENDIF.
     ENDLOOP.
+
     " 3. Delete all rows of the internal table with prices not in Euro,
     "    sort them by cheapest price and earliest date.
 
@@ -686,13 +702,24 @@ CLASS zcl_rgp_abap_course_basics IMPLEMENTATION.
 
 **
 *******The method should export a table containing all travels with a price (TOTAL_PRICE) higher than 2000 USD. Hint: Currencies are convertible
-    SELECT travel_id
+    SELECT *
     FROM ztravel_rp
-    WHERE total_price > 2000 AND currency_code = 'USD'
     INTO TABLE @DATA(lt_result_travels).
 
     LOOP AT lt_result_travels INTO DATA(ls_travels).
-      APPEND ls_travels-travel_id TO et_travel_ids_task8_2.
+     DATA current_total_price TYPE /dmo/total_price.
+     me->currency_converter(
+     EXPORTING
+     iv_currency_type = ls_travels-currency_code
+     iv_curr_total_price = ls_travels-total_price
+     IMPORTING
+     ev_currency_to_usd = current_total_price
+).
+
+      IF current_total_price > 2000.
+        APPEND ls_travels-travel_id TO et_travel_ids_task8_2.
+      ENDIF.
+
     ENDLOOP.
 
 ***Export a table containing the TRAVEL_ID of the first ten rows to screen.
@@ -702,7 +729,7 @@ CLASS zcl_rgp_abap_course_basics IMPLEMENTATION.
     UP TO 10 ROWS.
 
 
- DATA: lv_counter TYPE i value 0.
+    DATA: lv_counter TYPE i VALUE 0.
 
     LOOP AT ls_limit_travels INTO DATA(ls_travel_ids).
       IF lv_counter >= 10.
@@ -722,5 +749,36 @@ CLASS zcl_rgp_abap_course_basics IMPLEMENTATION.
   ENDMETHOD.
 
 
+
+  METHOD currency_converter.
+    " Define exchange rates manually
+    DATA: lv_exchange_rate TYPE p DECIMALS 4.
+
+    CASE iv_currency_type.
+      WHEN 'AMD'.
+        lv_exchange_rate = 26 / 1000. " Alternative way to define 0.0026
+      WHEN 'AUD'.
+        lv_exchange_rate = 64 / 100.  " Alternative way to define 0.64
+      WHEN 'EUR'.
+        lv_exchange_rate = 114 / 100.  " Alternative way to define 1.14
+      WHEN 'SGD'.
+        lv_exchange_rate = 76 / 100.  " Alternative way to define 0.76
+      WHEN 'AED'.
+        lv_exchange_rate = 27 / 100.  " Alternative way to define 0.27
+      WHEN 'AFN'.
+        lv_exchange_rate = 14 / 1000.  " Alternative way to define 0.014
+      WHEN 'JPY'.
+        lv_exchange_rate = 71 / 1000.  " Alternative way to define 0.071
+      WHEN 'ALL'.
+        lv_exchange_rate = 12 / 1000.  " Alternative way to define 0.012
+      WHEN 'INR'.
+        lv_exchange_rate = 12 / 1000.  " Alternative way to define 0.012
+      WHEN OTHERS.
+        lv_exchange_rate = 100 / 100.  " Default to no conversion
+    ENDCASE.
+
+    " Perform conversion
+    ev_currency_to_usd = iv_curr_total_price * lv_exchange_rate.
+  ENDMETHOD.
 
 ENDCLASS.
