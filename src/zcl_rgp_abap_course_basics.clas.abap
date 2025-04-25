@@ -111,7 +111,7 @@ CLASS zcl_rgp_abap_course_basics IMPLEMENTATION.
 
 
     " Execution of method date_parsing
-    DATA lv_input_string_date TYPE string VALUE '28 02 2025'.
+    DATA lv_input_string_date TYPE string VALUE '15 February 2025'.
     DATA lv_input_valid       TYPE abap_bool.
     DATA lv_date_result      TYPE dats.
 
@@ -255,6 +255,7 @@ CLASS zcl_rgp_abap_course_basics IMPLEMENTATION.
       lv_year  = lt_parts[ 3 ].
 
       iv_input_valid = abap_true.
+
     ENDIF.
     IF iv_input_valid = abap_true.
 
@@ -262,523 +263,529 @@ CLASS zcl_rgp_abap_course_basics IMPLEMENTATION.
             lv_month_number TYPE i,
             lt_valid_months TYPE TABLE OF string,
             lv_valid        TYPE string.
-
-      " Populate table with valid month names
-      APPEND 'January' TO lt_valid_months.
-      APPEND 'February' TO lt_valid_months.
+      APPEND  'January' TO lt_valid_months.
+      APPEND 'February'  TO lt_valid_months.
       APPEND 'March' TO lt_valid_months.
       APPEND 'April' TO lt_valid_months.
       APPEND 'May' TO lt_valid_months.
       APPEND 'June' TO lt_valid_months.
       APPEND 'July' TO lt_valid_months.
-      APPEND 'August' TO lt_valid_months.
+      APPEND 'August'  TO lt_valid_months.
       APPEND 'September' TO lt_valid_months.
-      APPEND 'October' TO lt_valid_months.
-      APPEND 'November' TO lt_valid_months.
+      APPEND 'October'  TO lt_valid_months.
+      APPEND 'November'  TO lt_valid_months.
       APPEND 'December' TO lt_valid_months.
 
-      "Validate month
-      " Validate the month
-      READ TABLE lt_valid_months WITH KEY table_line = lv_month INTO lv_valid.
-      IF sy-subrc <> 0.
-        iv_input_valid = abap_false. " Invalid month name
-      ENDIF.
-      " Validate day
-      IF lv_day CA 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.
+      " Check if lv_month exists in lt_valid_months
+      IF NOT line_exists( lt_valid_months[ table_line = lv_month ] ).
+        iv_input_valid = abap_false.  " Month is invalid
+EXIT.
+ENDIF.
 
-        iv_input_valid = abap_false.
-      ELSE.
-        lv_day_number = lv_day.
-        IF lv_day_number < 1 OR lv_day_number > 31.
-          iv_input_valid = abap_false.
+        " Validate month (numeric)
+        IF lv_month CN 'JanuaryFebruaryMarchAprilMayJuneJulyAugustSeptemberOctoberNovemberDecember'.
+          lv_month_number = lv_month.
+          IF lv_month_number < 1 OR lv_month_number > 12.
+            iv_input_valid = abap_false.
+            EXIT.
+          ENDIF.
         ENDIF.
-      ENDIF.
-      " Validate month (numeric or alphabetic)
-      IF lv_month CN 'JanuaryFebruaryMarchAprilMayJuneJulyAugustSeptemberOctoberNovemberDecember'.
-        lv_month_number = lv_month.
-        IF lv_month_number < 1 OR lv_month_number > 12.
-          iv_input_valid = abap_false.
-        ENDIF.
-      ENDIF.
+        " Validate day
+        IF lv_day CA 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.
 
-      IF lv_year CA 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.
-        iv_input_valid = abap_false.
-        " Validate year
-      ELSEIF strlen( lv_year ) <> 4.
-        iv_input_valid = abap_false.
-      ENDIF.
+          iv_input_valid = abap_false.
+        ELSE.
+          lv_day_number = lv_day.
+          IF lv_day_number < 1 OR lv_day_number > 31.
+            iv_input_valid = abap_false.
+            exit.
+          ENDIF.
+        ENDIF.
+
+
+        IF lv_year CA 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.
+          iv_input_valid = abap_false.
+          " Validate year
+        ELSEIF strlen( lv_year ) <> 4.
+          iv_input_valid = abap_false.
+          exit.
+        ENDIF.
 
 * Check if the year is leap when date is 29 and month is February
-      IF lv_month = 'February' OR lv_month_number = 2 OR lv_month_number = 02.
-        IF lv_day_number = 29 AND NOT ( lv_year MOD 4 = 0 AND ( lv_year MOD 100 <> 0 OR lv_year MOD 400 = 0 ) ).
-          iv_input_valid = abap_false.
+        IF lv_month = 'February' OR lv_month_number = 2 OR lv_month_number = 02.
+          IF lv_day_number = 29.
+            " Check if the year is NOT a leap year
+            IF NOT ( lv_year MOD 4 = 0 AND ( lv_year MOD 100 <> 0 OR lv_year MOD 400 = 0 ) ).
+              iv_input_valid = abap_false. " February 29 is invalid in non-leap years
+              EXIT.
+            ELSE.
+              iv_input_valid = abap_true.  " February 29 is valid in leap years
+            ENDIF.
+          ENDIF.
         ENDIF.
+
       ENDIF.
 
-    ELSE.
-      iv_input_valid = abap_false.
-    ENDIF.
-
-  ENDMETHOD.
+    ENDMETHOD.
 
 
-  METHOD validate_calculator_input.
-    " Initialize the message to empty
-    ev_message = ''.
+    METHOD validate_calculator_input.
+      " Initialize the message to empty
+      ev_message = ''.
 
 
-    IF  iv_second_number = c_invalid_number  AND
-       ( iv_operator <> c_operator_add AND
-         iv_operator <> c_operator_sub AND
-         iv_operator <> c_operator_mul AND
-         iv_operator <> c_operator_div ).
-      ev_message = |Error: Division by zero is not allowed and the operator "{ iv_operator }" is invalid.|.
-      RETURN. " Exit the method early
-    ENDIF.
-
-    IF iv_operator <> '+' AND
-       iv_operator <> '-' AND
-       iv_operator <> '*' AND
-       iv_operator <> '/'.
-      ev_message = |Error: Invalid operator "{ iv_operator }".|.
-      RETURN. " Exit the method early
-    ENDIF.
-
-    IF iv_second_number = 0.
-      ev_message = 'Error: Division by zero is not allowed!'.
-      RETURN. " Exit the method early
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD zif_abap_course_basics~calculator.
-
-    CASE iv_operator.
-      WHEN c_operator_add.
-        rv_result = iv_first_number + iv_second_number.
-      WHEN c_operator_sub.
-        rv_result = iv_first_number - iv_second_number.
-      WHEN c_operator_mul.
-        rv_result = iv_first_number * iv_second_number.
-      WHEN c_operator_div.
-        rv_result = iv_first_number / iv_second_number.
-    ENDCASE.
-
-  ENDMETHOD.
-
-  METHOD zif_abap_course_basics~date_parsing.
-    DATA: lv_input TYPE string.
-    DATA: lv_month_extract TYPE string.
-    DATA: lv_day_extract TYPE string.
-    DATA: lv_year_extract TYPE string.
-    DATA: lt_parts TYPE TABLE OF string.
-
-
-    lv_input = iv_date. " Copy to a local variable
-
-    SPLIT lv_input AT space INTO TABLE lt_parts.
-
-    IF lines( lt_parts ) = 3.
-
-      lv_day_extract = lt_parts[ 1 ].
-      IF strlen( lv_day_extract ) = 1. " Check if month is a single digit
-        CONCATENATE '0' lv_day_extract INTO lv_day_extract. " Add leading zero
-      ELSE.
-        lv_day_extract = lv_day_extract.
-      ENDIF.
-      lv_month_extract = lt_parts[ 2 ].
-      lv_year_extract  = lt_parts[ 3 ].
-    ENDIF.
-
-
-
-    TRANSLATE lv_month_extract TO LOWER CASE.
-
-    " Extract components.
-    IF
-    lv_month_extract = 'january'.
-      lv_month_extract = '01'.
-
-    ELSEIF lv_month_extract = 'february'.
-      lv_month_extract = '02'.
-
-    ELSEIF lv_month_extract = 'march'.
-      lv_month_extract = '03'.
-
-    ELSEIF lv_month_extract = 'april'.
-      lv_month_extract = '04'.
-
-    ELSEIF lv_month_extract = 'may'.
-      lv_month_extract = '05'.
-
-    ELSEIF lv_month_extract = 'june'.
-      lv_month_extract = '06'.
-
-    ELSEIF lv_month_extract = 'july'.
-      lv_month_extract = '07'.
-
-    ELSEIF lv_month_extract = 'august'.
-      lv_month_extract = '08'.
-
-    ELSEIF lv_month_extract = 'september'.
-      lv_month_extract = '09'.
-
-    ELSEIF lv_month_extract = 'october'.
-      lv_month_extract = '10'.
-
-    ELSEIF lv_month_extract = 'november'.
-      lv_month_extract = '11'.
-
-    ELSEIF lv_month_extract = 'december'.
-      lv_month_extract = '12'.
-    ELSEIF lv_month_extract CO '0123456789'.
-
-      IF strlen( lv_month_extract ) = 1. " Check if month is a single digit
-        CONCATENATE '0' lv_month_extract INTO lv_month_extract. " Add leading zero
-      ELSE.
-        lv_month_extract = lv_month_extract.
+      IF  iv_second_number = c_invalid_number  AND
+         ( iv_operator <> c_operator_add AND
+           iv_operator <> c_operator_sub AND
+           iv_operator <> c_operator_mul AND
+           iv_operator <> c_operator_div ).
+        ev_message = |Error: Division by zero is not allowed and the operator "{ iv_operator }" is invalid.|.
+        RETURN. " Exit the method early
       ENDIF.
 
-    ENDIF.
-    "YYYYMMDD
-
-    CONCATENATE lv_year_extract lv_month_extract lv_day_extract INTO rv_result.
-  ENDMETHOD.
-
-
-  METHOD zif_abap_course_basics~fizz_buzz.
-    DATA: lv_result_line TYPE string.
-    DATA: lv_number      TYPE i.
-
-    CLEAR rv_result.
-
-    DO 100 TIMES.
-      lv_number = sy-index.
-
-      IF lv_number MOD 15 = 0.
-        lv_result_line = 'FizzBuzz'.
-      ELSEIF lv_number MOD 3 = 0.
-        lv_result_line = 'Fizz'.
-      ELSEIF lv_number MOD 5 = 0.
-        lv_result_line = 'Buzz'.
-      ELSE.
-        lv_result_line = lv_number.
+      IF iv_operator <> '+' AND
+         iv_operator <> '-' AND
+         iv_operator <> '*' AND
+         iv_operator <> '/'.
+        ev_message = |Error: Invalid operator "{ iv_operator }".|.
+        RETURN. " Exit the method early
       ENDIF.
 
-      IF rv_result IS NOT INITIAL.
-        CONCATENATE rv_result cl_abap_char_utilities=>cr_lf lv_result_line INTO rv_result.
-      ELSE.
-        rv_result = lv_result_line.
+      IF iv_second_number = 0.
+        ev_message = 'Error: Division by zero is not allowed!'.
+        RETURN. " Exit the method early
       ENDIF.
 
-    ENDDO.
+    ENDMETHOD.
 
-  ENDMETHOD.
+    METHOD zif_abap_course_basics~calculator.
 
+      CASE iv_operator.
+        WHEN c_operator_add.
+          rv_result = iv_first_number + iv_second_number.
+        WHEN c_operator_sub.
+          rv_result = iv_first_number - iv_second_number.
+        WHEN c_operator_mul.
+          rv_result = iv_first_number * iv_second_number.
+        WHEN c_operator_div.
+          rv_result = iv_first_number / iv_second_number.
+      ENDCASE.
 
-  METHOD zif_abap_course_basics~get_current_date_time.
+    ENDMETHOD.
 
-    DATA: lv_timestamp TYPE timestampl.
-
-    GET TIME STAMP FIELD lv_timestamp.
-
-    rv_result = lv_timestamp.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abap_course_basics~hello_world.
-
-    DATA: lv_user_system_id TYPE sy-uname.
-    lv_user_system_id = sy-uname.
-
-    CONCATENATE 'Hello , ' iv_name '. Your user ID is: ' lv_user_system_id INTO rv_result.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abap_course_basics~internal_tables.
+    METHOD zif_abap_course_basics~date_parsing.
+      DATA: lv_input TYPE string.
+      DATA: lv_month_extract TYPE string.
+      DATA: lv_day_extract TYPE string.
+      DATA: lv_year_extract TYPE string.
+      DATA: lt_parts TYPE TABLE OF string.
 
 
-    SELECT * FROM ztravel_rp INTO TABLE @DATA(lt_travel).
+      lv_input = iv_date. " Copy to a local variable
 
-    DELETE ztravel_rp FROM TABLE @lt_travel.
-    COMMIT WORK AND WAIT.
-    INSERT ztravel_rp FROM
-   ( SELECT FROM /dmo/travel
-       FIELDS travel_id          AS travel_uuid,
-              agency_id        AS agency_id,
-              customer_id      AS customer_id,
-              begin_date       AS begin_date,
-              end_date         AS end_date,
-              booking_fee      AS booking_fee,
-              total_price      AS total_price,
-              currency_code    AS currency_code,
-              description      AS description,
-              CASE status
-            WHEN 'B' THEN  'A'  " ACCEPTED
-            WHEN 'X'  THEN 'X' " CANCELLED
-                ELSE 'O'         " open
-           END                 AS overall_status,
-              createdby        AS createdby,
-              createdat        AS createdat,
-              lastchangedby    AS last_changed_by,
-              lastchangedat    AS last_changed_at
-       ORDER BY travel_id ).
-    COMMIT WORK AND WAIT.
+      SPLIT lv_input AT space INTO TABLE lt_parts.
+
+      IF lines( lt_parts ) = 3.
+
+        lv_day_extract = lt_parts[ 1 ].
+        IF strlen( lv_day_extract ) = 1. " Check if month is a single digit
+          CONCATENATE '0' lv_day_extract INTO lv_day_extract. " Add leading zero
+        ELSE.
+          lv_day_extract = lv_day_extract.
+        ENDIF.
+        lv_month_extract = lt_parts[ 2 ].
+        lv_year_extract  = lt_parts[ 3 ].
+      ENDIF.
+
+
+
+      TRANSLATE lv_month_extract TO LOWER CASE.
+
+      " Extract components.
+      IF
+      lv_month_extract = 'january'.
+        lv_month_extract = '01'.
+
+      ELSEIF lv_month_extract = 'february'.
+        lv_month_extract = '02'.
+
+      ELSEIF lv_month_extract = 'march'.
+        lv_month_extract = '03'.
+
+      ELSEIF lv_month_extract = 'april'.
+        lv_month_extract = '04'.
+
+      ELSEIF lv_month_extract = 'may'.
+        lv_month_extract = '05'.
+
+      ELSEIF lv_month_extract = 'june'.
+        lv_month_extract = '06'.
+
+      ELSEIF lv_month_extract = 'july'.
+        lv_month_extract = '07'.
+
+      ELSEIF lv_month_extract = 'august'.
+        lv_month_extract = '08'.
+
+      ELSEIF lv_month_extract = 'september'.
+        lv_month_extract = '09'.
+
+      ELSEIF lv_month_extract = 'october'.
+        lv_month_extract = '10'.
+
+      ELSEIF lv_month_extract = 'november'.
+        lv_month_extract = '11'.
+
+      ELSEIF lv_month_extract = 'december'.
+        lv_month_extract = '12'.
+      ELSEIF lv_month_extract CO '0123456789'.
+
+        IF strlen( lv_month_extract ) = 1. " Check if month is a single digit
+          CONCATENATE '0' lv_month_extract INTO lv_month_extract. " Add leading zero
+        ELSE.
+          lv_month_extract = lv_month_extract.
+        ENDIF.
+
+      ENDIF.
+      "YYYYMMDD
+
+      CONCATENATE lv_year_extract lv_month_extract lv_day_extract INTO rv_result.
+    ENDMETHOD.
+
+
+    METHOD zif_abap_course_basics~fizz_buzz.
+      DATA: lv_result_line TYPE string.
+      DATA: lv_number      TYPE i.
+
+      CLEAR rv_result.
+
+      DO 100 TIMES.
+        lv_number = sy-index.
+
+        IF lv_number MOD 15 = 0.
+          lv_result_line = 'FizzBuzz'.
+        ELSEIF lv_number MOD 3 = 0.
+          lv_result_line = 'Fizz'.
+        ELSEIF lv_number MOD 5 = 0.
+          lv_result_line = 'Buzz'.
+        ELSE.
+          lv_result_line = lv_number.
+        ENDIF.
+
+        IF rv_result IS NOT INITIAL.
+          CONCATENATE rv_result cl_abap_char_utilities=>cr_lf lv_result_line INTO rv_result.
+        ELSE.
+          rv_result = lv_result_line.
+        ENDIF.
+
+      ENDDO.
+
+    ENDMETHOD.
+
+
+    METHOD zif_abap_course_basics~get_current_date_time.
+
+      DATA: lv_timestamp TYPE timestampl.
+
+      GET TIME STAMP FIELD lv_timestamp.
+
+      rv_result = lv_timestamp.
+
+    ENDMETHOD.
+
+
+    METHOD zif_abap_course_basics~hello_world.
+
+      DATA: lv_user_system_id TYPE sy-uname.
+      lv_user_system_id = sy-uname.
+
+      CONCATENATE 'Hello , ' iv_name '. Your user ID is: ' lv_user_system_id INTO rv_result.
+
+    ENDMETHOD.
+
+
+    METHOD zif_abap_course_basics~internal_tables.
+
+
+      SELECT * FROM ztravel_rp INTO TABLE @DATA(lt_travel).
+
+        DELETE ztravel_rp FROM TABLE @lt_travel.
+        COMMIT WORK AND WAIT.
+        INSERT ztravel_rp FROM
+       ( SELECT FROM /dmo/travel
+           FIELDS travel_id          AS travel_uuid,
+                  agency_id        AS agency_id,
+                  customer_id      AS customer_id,
+                  begin_date       AS begin_date,
+                  end_date         AS end_date,
+                  booking_fee      AS booking_fee,
+                  total_price      AS total_price,
+                  currency_code    AS currency_code,
+                  description      AS description,
+                  CASE status
+                WHEN 'B' THEN  'A'  " ACCEPTED
+                WHEN 'X'  THEN 'X' " CANCELLED
+                    ELSE 'O'         " open
+               END                 AS overall_status,
+                  createdby        AS createdby,
+                  createdat        AS createdat,
+                  lastchangedby    AS last_changed_by,
+                  lastchangedat    AS last_changed_at
+           ORDER BY travel_id ).
+        COMMIT WORK AND WAIT.
 
 *
 **    " Populate et_travel_ids_task7_1 using LOOP
-    LOOP AT lt_travel INTO DATA(ls_travel_id)
-         WHERE agency_id = '070001'
-           AND booking_fee = 20
-           AND currency_code = 'JPY'.
-      APPEND ls_travel_id-travel_id TO et_travel_ids_task7_1.
-    ENDLOOP.
+        LOOP AT lt_travel INTO DATA(ls_travel_id)
+             WHERE agency_id = '070001'
+               AND booking_fee = 20
+               AND currency_code = 'JPY'.
+          APPEND ls_travel_id-travel_id TO et_travel_ids_task7_1.
+        ENDLOOP.
 
 
 *    " Populate et_travel_ids_task7_2 using LOOP
-    LOOP AT lt_travel INTO DATA(ls_total_price).
+        LOOP AT lt_travel INTO DATA(ls_total_price).
 
- DATA current_total_price TYPE /dmo/total_price.
+          DATA current_total_price TYPE /dmo/total_price.
 
-      me->currency_converter(
-     EXPORTING
-     iv_currency_type = ls_total_price-currency_code
-     iv_curr_total_price = ls_total_price-total_price
-     IMPORTING
-     ev_currency_to_usd = current_total_price
-).
+          me->currency_converter(
+         EXPORTING
+         iv_currency_type = ls_total_price-currency_code
+         iv_curr_total_price = ls_total_price-total_price
+         IMPORTING
+         ev_currency_to_usd = current_total_price
+    ).
 
-      IF current_total_price > 2000.
-        APPEND ls_total_price-travel_id TO et_travel_ids_task7_2.
-      ENDIF.
-    ENDLOOP.
+          IF current_total_price > 2000.
+            APPEND ls_total_price-travel_id TO et_travel_ids_task7_2.
+          ENDIF.
+        ENDLOOP.
 
-    " 3. Delete all rows of the internal table with prices not in Euro,
-    "    sort them by cheapest price and earliest date.
+        " 3. Delete all rows of the internal table with prices not in Euro,
+        "    sort them by cheapest price and earliest date.
 
-    LOOP AT lt_travel INTO DATA(ls_travel_price)
-    WHERE currency_code <> 'EUR'.
-      DELETE lt_travel INDEX sy-tabix.
-    ENDLOOP.
-    SORT lt_travel BY total_price ASCENDING begin_date DESCENDING.
-
-
-    " Call the method to export and print the sorted table
-    print_result_table_task7(
-    IMPORTING
-    lt_sorted_table = lt_travel ).
-
-    " 4. Populate et_travel_ids_task7_3: TRAVEL_ID of the first ten rows after sorting
-    DATA: lv_counter TYPE i.
-    lv_counter = 0.
-    LOOP AT lt_travel INTO DATA(ls_travel_rp).
-      IF lv_counter >= 10.
-        EXIT.
-      ENDIF.
-      APPEND ls_travel_rp-travel_id TO et_travel_ids_task7_3.
-      lv_counter = lv_counter + 1.
-    ENDLOOP.
-
-  ENDMETHOD.
+        LOOP AT lt_travel INTO DATA(ls_travel_price)
+        WHERE currency_code <> 'EUR'.
+          DELETE lt_travel INDEX sy-tabix.
+        ENDLOOP.
+        SORT lt_travel BY total_price ASCENDING begin_date DESCENDING.
 
 
+        " Call the method to export and print the sorted table
+        print_result_table_task7(
+        IMPORTING
+        lt_sorted_table = lt_travel ).
 
-  METHOD zif_abap_course_basics~scrabble_score.
+        " 4. Populate et_travel_ids_task7_3: TRAVEL_ID of the first ten rows after sorting
+        DATA: lv_counter TYPE i.
+        lv_counter = 0.
+        LOOP AT lt_travel INTO DATA(ls_travel_rp).
+          IF lv_counter >= 10.
+            EXIT.
+          ENDIF.
+          APPEND ls_travel_rp-travel_id TO et_travel_ids_task7_3.
+          lv_counter = lv_counter + 1.
+        ENDLOOP.
 
-    DATA: lv_length TYPE i.
-    DATA: lv_offset TYPE i.
-    DATA: lv_char TYPE c LENGTH 1.
-    DATA: lv_position TYPE i.
-    DATA: lv_total_sum TYPE i.
-
-    lv_length = strlen( iv_word ).
-    lv_offset = 0.
-    lv_total_sum = 0.
-
-
-    WHILE lv_offset < lv_length.
-      lv_char = iv_word+lv_offset(1).
-
-      IF lv_char CA 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.
-        TRANSLATE lv_char TO UPPER CASE.
-        CASE lv_char.
-          WHEN 'A'.
-            lv_position = 1.
-          WHEN 'B'.
-            lv_position = 2.
-          WHEN 'C'.
-            lv_position = 3.
-          WHEN 'D'.
-            lv_position = 4.
-          WHEN 'E'.
-            lv_position = 5.
-          WHEN 'F'.
-            lv_position = 6.
-          WHEN 'G'.
-            lv_position = 7.
-          WHEN 'H'.
-            lv_position = 8.
-          WHEN 'I'.
-            lv_position = 9.
-          WHEN 'J'.
-            lv_position = 10.
-          WHEN 'K'.
-            lv_position = 11.
-          WHEN 'L'.
-            lv_position = 12.
-          WHEN 'M'.
-            lv_position = 13.
-          WHEN 'N'.
-            lv_position = 14.
-          WHEN 'O'.
-            lv_position = 15.
-          WHEN 'P'.
-            lv_position = 16.
-          WHEN 'Q'.
-            lv_position = 17.
-          WHEN 'R'.
-            lv_position = 18.
-          WHEN 'S'.
-            lv_position = 19.
-          WHEN 'T'.
-            lv_position = 20.
-          WHEN 'U'.
-            lv_position = 21.
-          WHEN 'V'.
-            lv_position = 22.
-          WHEN 'W'.
-            lv_position = 23.
-          WHEN 'X'.
-            lv_position = 24.
-          WHEN 'Y'.
-            lv_position = 25.
-          WHEN 'Z'.
-            lv_position = 26.
-
-        ENDCASE.
+      ENDMETHOD.
 
 
-        lv_total_sum = lv_total_sum + lv_position.
-      ENDIF.
 
-      lv_offset = lv_offset + 1.
+      METHOD zif_abap_course_basics~scrabble_score.
 
-    ENDWHILE.
+        DATA: lv_length TYPE i.
+        DATA: lv_offset TYPE i.
+        DATA: lv_char TYPE c LENGTH 1.
+        DATA: lv_position TYPE i.
+        DATA: lv_total_sum TYPE i.
 
-    rv_result = lv_total_sum.
-  ENDMETHOD.
+        lv_length = strlen( iv_word ).
+        lv_offset = 0.
+        lv_total_sum = 0.
 
 
-  METHOD validate_input_scrabble_score.
+        WHILE lv_offset < lv_length.
+          lv_char = iv_word+lv_offset(1).
+
+          IF lv_char CA 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.
+            TRANSLATE lv_char TO UPPER CASE.
+            CASE lv_char.
+              WHEN 'A'.
+                lv_position = 1.
+              WHEN 'B'.
+                lv_position = 2.
+              WHEN 'C'.
+                lv_position = 3.
+              WHEN 'D'.
+                lv_position = 4.
+              WHEN 'E'.
+                lv_position = 5.
+              WHEN 'F'.
+                lv_position = 6.
+              WHEN 'G'.
+                lv_position = 7.
+              WHEN 'H'.
+                lv_position = 8.
+              WHEN 'I'.
+                lv_position = 9.
+              WHEN 'J'.
+                lv_position = 10.
+              WHEN 'K'.
+                lv_position = 11.
+              WHEN 'L'.
+                lv_position = 12.
+              WHEN 'M'.
+                lv_position = 13.
+              WHEN 'N'.
+                lv_position = 14.
+              WHEN 'O'.
+                lv_position = 15.
+              WHEN 'P'.
+                lv_position = 16.
+              WHEN 'Q'.
+                lv_position = 17.
+              WHEN 'R'.
+                lv_position = 18.
+              WHEN 'S'.
+                lv_position = 19.
+              WHEN 'T'.
+                lv_position = 20.
+              WHEN 'U'.
+                lv_position = 21.
+              WHEN 'V'.
+                lv_position = 22.
+              WHEN 'W'.
+                lv_position = 23.
+              WHEN 'X'.
+                lv_position = 24.
+              WHEN 'Y'.
+                lv_position = 25.
+              WHEN 'Z'.
+                lv_position = 26.
+
+            ENDCASE.
 
 
-    IF iv_word_input = ''.
-      iv_input_valid = abap_false.
-    ELSEIF iv_word_input CA '0123456789'.
-      iv_input_valid = abap_false.
-    ELSE.
-      iv_input_valid = abap_true.
-    ENDIF.
+            lv_total_sum = lv_total_sum + lv_position.
+          ENDIF.
 
-  ENDMETHOD.
+          lv_offset = lv_offset + 1.
 
-  METHOD zif_abap_course_basics~open_sql.
+        ENDWHILE.
+
+        rv_result = lv_total_sum.
+      ENDMETHOD.
+
+
+      METHOD validate_input_scrabble_score.
+
+
+        IF iv_word_input = ''.
+          iv_input_valid = abap_false.
+        ELSEIF iv_word_input CA '0123456789'.
+          iv_input_valid = abap_false.
+        ELSE.
+          iv_input_valid = abap_true.
+        ENDIF.
+
+      ENDMETHOD.
+
+      METHOD zif_abap_course_basics~open_sql.
 *The method should export a table containing all travels(TRAVEL_ID)
 *for agency ( AGENCY_ID) 070001 with booking fee of 20 JPY (BOOKING_FEE CURRENCY_CODE)
 
-    SELECT travel_id
-      FROM ztravel_rp
-      WHERE agency_id = '070001'
-        AND booking_fee = 20
-        AND currency_code = 'JPY'
-      INTO TABLE @DATA(lt_result_travel_ids).
+        SELECT travel_id
+          FROM ztravel_rp
+          WHERE agency_id = '070001'
+            AND booking_fee = 20
+            AND currency_code = 'JPY'
+          INTO TABLE @DATA(lt_result_travel_ids).
 
 
-    LOOP AT lt_result_travel_ids INTO DATA(ls_travel).
-      APPEND ls_travel-travel_id TO et_travel_ids_task8_1.
-    ENDLOOP.
+          LOOP AT lt_result_travel_ids INTO DATA(ls_travel).
+            APPEND ls_travel-travel_id TO et_travel_ids_task8_1.
+          ENDLOOP.
 
 **
 *******The method should export a table containing all travels with a price (TOTAL_PRICE) higher than 2000 USD. Hint: Currencies are convertible
-    SELECT *
-    FROM ztravel_rp
-    INTO TABLE @DATA(lt_result_travels).
+          SELECT *
+          FROM ztravel_rp
+          INTO TABLE @DATA(lt_result_travels).
 
-    LOOP AT lt_result_travels INTO DATA(ls_travels).
-     DATA current_total_price TYPE /dmo/total_price.
-     me->currency_converter(
-     EXPORTING
-     iv_currency_type = ls_travels-currency_code
-     iv_curr_total_price = ls_travels-total_price
-     IMPORTING
-     ev_currency_to_usd = current_total_price
-).
+            LOOP AT lt_result_travels INTO DATA(ls_travels).
+              DATA current_total_price TYPE /dmo/total_price.
+              me->currency_converter(
+              EXPORTING
+              iv_currency_type = ls_travels-currency_code
+              iv_curr_total_price = ls_travels-total_price
+              IMPORTING
+              ev_currency_to_usd = current_total_price
+         ).
 
-      IF current_total_price > 2000.
-        APPEND ls_travels-travel_id TO et_travel_ids_task8_2.
-      ENDIF.
+              IF current_total_price > 2000.
+                APPEND ls_travels-travel_id TO et_travel_ids_task8_2.
+              ENDIF.
 
-    ENDLOOP.
+            ENDLOOP.
 
 ***Export a table containing the TRAVEL_ID of the first ten rows to screen.
-    SELECT *
-    FROM ztravel_rp
-    INTO TABLE @DATA(ls_limit_travels)
-    UP TO 10 ROWS.
+            SELECT *
+            FROM ztravel_rp
+            INTO TABLE @DATA(ls_limit_travels)
+            UP TO 10 ROWS.
 
 
-    DATA: lv_counter TYPE i VALUE 0.
+              DATA: lv_counter TYPE i VALUE 0.
 
-    LOOP AT ls_limit_travels INTO DATA(ls_travel_ids).
-      IF lv_counter >= 10.
-        EXIT.
-      ENDIF.
-      APPEND ls_travel_ids-travel_id TO et_travel_ids_task8_3.
-      lv_counter = lv_counter + 1.
+              LOOP AT ls_limit_travels INTO DATA(ls_travel_ids).
+                IF lv_counter >= 10.
+                  EXIT.
+                ENDIF.
+                APPEND ls_travel_ids-travel_id TO et_travel_ids_task8_3.
+                lv_counter = lv_counter + 1.
 
-    ENDLOOP.
+              ENDLOOP.
 
-  ENDMETHOD.
-
-
-  METHOD print_result_table_task7.
-
-    mt_travel_data = lt_sorted_table.
-  ENDMETHOD.
+            ENDMETHOD.
 
 
+            METHOD print_result_table_task7.
 
-  METHOD currency_converter.
-    " Define exchange rates manually
-    DATA: lv_exchange_rate TYPE p DECIMALS 4.
+              mt_travel_data = lt_sorted_table.
+            ENDMETHOD.
 
-    CASE iv_currency_type.
-      WHEN 'AMD'.
-        lv_exchange_rate = 26 / 1000. " Alternative way to define 0.0026
-      WHEN 'AUD'.
-        lv_exchange_rate = 64 / 100.  " Alternative way to define 0.64
-      WHEN 'EUR'.
-        lv_exchange_rate = 114 / 100.  " Alternative way to define 1.14
-      WHEN 'SGD'.
-        lv_exchange_rate = 76 / 100.  " Alternative way to define 0.76
-      WHEN 'AED'.
-        lv_exchange_rate = 27 / 100.  " Alternative way to define 0.27
-      WHEN 'AFN'.
-        lv_exchange_rate = 14 / 1000.  " Alternative way to define 0.014
-      WHEN 'JPY'.
-        lv_exchange_rate = 71 / 1000.  " Alternative way to define 0.071
-      WHEN 'ALL'.
-        lv_exchange_rate = 12 / 1000.  " Alternative way to define 0.012
-      WHEN 'INR'.
-        lv_exchange_rate = 12 / 1000.  " Alternative way to define 0.012
-      WHEN OTHERS.
-        lv_exchange_rate = 100 / 100.  " Default to no conversion
-    ENDCASE.
 
-    " Perform conversion
-    ev_currency_to_usd = iv_curr_total_price * lv_exchange_rate.
-  ENDMETHOD.
+
+            METHOD currency_converter.
+              " Define exchange rates manually
+              DATA: lv_exchange_rate TYPE p DECIMALS 4.
+
+              CASE iv_currency_type.
+                WHEN 'AMD'.
+                  lv_exchange_rate = 26 / 1000. " Alternative way to define 0.0026
+                WHEN 'AUD'.
+                  lv_exchange_rate = 64 / 100.  " Alternative way to define 0.64
+                WHEN 'EUR'.
+                  lv_exchange_rate = 114 / 100.  " Alternative way to define 1.14
+                WHEN 'SGD'.
+                  lv_exchange_rate = 76 / 100.  " Alternative way to define 0.76
+                WHEN 'AED'.
+                  lv_exchange_rate = 27 / 100.  " Alternative way to define 0.27
+                WHEN 'AFN'.
+                  lv_exchange_rate = 14 / 1000.  " Alternative way to define 0.014
+                WHEN 'JPY'.
+                  lv_exchange_rate = 71 / 1000.  " Alternative way to define 0.071
+                WHEN 'ALL'.
+                  lv_exchange_rate = 12 / 1000.  " Alternative way to define 0.012
+                WHEN 'INR'.
+                  lv_exchange_rate = 12 / 1000.  " Alternative way to define 0.012
+                WHEN OTHERS.
+                  lv_exchange_rate = 100 / 100.  " Default to no conversion
+              ENDCASE.
+
+              " Perform conversion
+              ev_currency_to_usd = iv_curr_total_price * lv_exchange_rate.
+            ENDMETHOD.
 
 ENDCLASS.
