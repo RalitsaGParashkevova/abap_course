@@ -614,5 +614,4 @@ msg = 'open sql task 8.2 is incorrect.'
 
 
 
-
 ENDCLASS.
