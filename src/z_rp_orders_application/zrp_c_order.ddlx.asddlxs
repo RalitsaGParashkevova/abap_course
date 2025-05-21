@@ -1,0 +1,128 @@
+@Metadata.layer: #CORE
+@UI: {
+  headerInfo: { typeName: 'Order',
+                typeNamePlural: 'Orders',
+                title: { type: #STANDARD, label: 'Order', value: 'OrderID' } },
+  presentationVariant: [{ sortOrder: [{ by: 'CreationDate', direction:  #DESC }] }] }
+annotate view ZRP_C_ORDER
+    with 
+{
+  @UI.facet: [ { id:              'Order',
+                 purpose:         #STANDARD,
+                 type:            #IDENTIFICATION_REFERENCE,
+                 label:           'Order Header',
+                 targetQualifier: 'HeaderOrders',
+                 position:        10 },
+               { id:              'OrderDetails',
+                 purpose:         #STANDARD,
+                 type:            #FIELDGROUP_REFERENCE,
+                 label:           'Order Details',
+                 targetQualifier: 'OrderDetails',
+                 position:        20 },
+                  { id:              'Item',
+                 purpose:         #STANDARD,
+                 type:            #LINEITEM_REFERENCE,
+                 label:           'Items',
+                 position:        20,
+                 targetElement:   '_Item'} ]  
+  
+  @UI.hidden: true
+   OrderUuid;
+   
+   @UI: { lineItem:       [ { position: 20 } ],
+         selectionField: [{ position: 20 } ],
+         fieldGroup: [{ qualifier: 'HeaderOrders',
+         position: 10 }] }
+    OrderId;
+    
+    @EndUserText.label: 'Name'
+      @UI: { lineItem:       [ { position: 30 } ],
+     fieldGroup: [{ qualifier: 'HeaderOrders',
+     position: 30,
+     label: 'Name of the order' },
+     { qualifier: 'OrderDetails',
+     position: 10 }] }
+    Name;
+    
+  @EndUserText.label: 'Status'
+  @UI: { lineItem: [{ position: 30 } ],
+  fieldGroup: [{ qualifier: 'OrderDetails', position: 30, label: 'Status of Order' },
+  { qualifier: 'OrderDetails' },
+
+  { type: #FOR_ACTION, dataAction: 'orderCompleted', label: 'Complete Order' },
+  { type: #FOR_ACTION,  dataAction: 'orderCancelled', label: 'Cancelled Order' },
+  { type: #FOR_ACTION,  dataAction: 'orderInProcess', label: 'In Process Order' }],
+  identification: [{ position: 90 },
+  { type: #FOR_ACTION, dataAction: 'orderCompleted', label: 'Complete Order' },
+  { type: #FOR_ACTION, dataAction: 'orderCancelled', label: 'Cancelled Order' },
+  { type: #FOR_ACTION, dataAction: 'orderInProcess', label: 'In Process Order' } ] }
+    Status;
+    
+    @EndUserText.label: 'Customer Name'
+      @UI: { lineItem:       [ { position: 30 } ],
+     fieldGroup: [{ qualifier: 'HeaderOrders',
+     position: 30,
+     label: 'Name of the order' },
+     { qualifier: 'OrderDetails',
+     position: 10 }] }
+    CustomerName;
+    
+  @EndUserText.label: 'Creation Date'
+      @UI: { lineItem:       [ { position: 30 } ],
+     fieldGroup: [{ qualifier: 'HeaderOrders',
+     position: 30,
+     label: 'Name of the order' },
+     { qualifier: 'OrderDetails',
+     position: 10 }] }
+    CreationDate;
+    
+   @EndUserText.label: 'Cancellation Date'
+      @UI: { lineItem:       [ { position: 30 } ],
+     fieldGroup: [{ qualifier: 'HeaderOrders',
+     position: 30,
+     label: 'Name of the order' },
+     { qualifier: 'OrderDetails',
+     position: 10 }] }
+    CancellationDate;
+    
+    @EndUserText.label: 'Completion Date'
+      @UI: { lineItem:       [ { position: 30 } ],
+     fieldGroup: [{ qualifier: 'HeaderOrders',
+     position: 30,
+     label: 'Name of the order' },
+     { qualifier: 'OrderDetails',
+     position: 10 }] }
+    CompletionDate;
+    
+   
+     @EndUserText.label: 'Delivery Country'
+      @UI: { lineItem:       [ { position: 30 } ],
+     fieldGroup: [{ qualifier: 'HeaderOrders',
+     position: 30,
+     label: 'Name of the order' },
+     { qualifier: 'OrderDetails',
+     position: 10 }] }
+    DeliveryCountry;
+   
+   @EndUserText.label: 'Total Price'
+      @UI: { lineItem:       [ { position: 30 } ],
+     fieldGroup: [{ qualifier: 'HeaderOrders',
+     position: 30,
+     label: 'Name of the order' },
+     { qualifier: 'OrderDetails',
+     position: 10 }] }
+    TotalPrice;
+    
+ 
+     @EndUserText.label: 'Complexity'
+      @UI: { lineItem:       [ { position: 30 } ],
+     fieldGroup: [{ qualifier: 'HeaderOrders',
+     position: 30,
+     label: 'Name of the order' },
+     { qualifier: 'OrderDetails',
+     position: 10 }] }
+    Complexity;
+
+   
+    
+}

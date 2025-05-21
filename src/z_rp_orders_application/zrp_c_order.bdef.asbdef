@@ -1,0 +1,27 @@
+projection;
+use draft;
+define behavior for ZRP_C_ORDER alias Orders
+//use etag
+{
+  use create;
+  use update;
+  use delete;
+
+  use association _Item { create; with draft; }
+
+  use action orderCancelled;
+  use action orderCompleted;
+  use action orderInProcess;
+
+
+}
+
+define behavior for ZRP_C_ITEM alias Item
+//use etag
+{
+  use update;
+  use delete;
+
+  use association _Order { with draft; }
+
+}
