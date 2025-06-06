@@ -3,126 +3,116 @@
   headerInfo: { typeName: 'Order',
                 typeNamePlural: 'Orders',
                 title: { type: #STANDARD, label: 'Order', value: 'OrderID' } },
-  presentationVariant: [{ sortOrder: [{ by: 'CreationDate', direction:  #DESC }] }] }
-annotate view ZRP_C_ORDER
-    with 
+  presentationVariant: [{ sortOrder: [{ by: 'CreationDate', direction:  #DESC }] }]
+}
+annotate view ZRP_C_ORDER with
 {
-  @UI.facet: [ { id:              'Order',
-                 purpose:         #STANDARD,
-                 type:            #IDENTIFICATION_REFERENCE,
-                 label:           'Order Header',
-                 targetQualifier: 'HeaderOrders',
-                 position:        10 },
-               { id:              'OrderDetails',
-                 purpose:         #STANDARD,
-                 type:            #FIELDGROUP_REFERENCE,
-                 label:           'Order Details',
-                 targetQualifier: 'OrderDetails',
-                 position:        20 },
-                  { id:              'Item',
-                 purpose:         #STANDARD,
-                 type:            #LINEITEM_REFERENCE,
-                 label:           'Items',
-                 position:        20,
-                 targetElement:   '_Item'} ]  
-  
-  @UI.hidden: true
-   OrderUuid;
+  // Facets for the Object Page layout
+  @UI.facet: [
+    { id:              'OrderHeaderFacet',
+      purpose:         #STANDARD,
+      type:            #IDENTIFICATION_REFERENCE, // This type usually points to an Identification annotation
+      label:           'Order Header',
+      targetQualifier: 'HeaderOrders', // This links to the @UI.identification#HeaderOrders
+      position:        10 },
+    { id:              'OrderDetailsFacet',
+      purpose:         #STANDARD,
+      type:            #FIELDGROUP_REFERENCE,
+      label:           'Order Details',
+      targetQualifier: 'OrderDetails', // This links to the @UI.fieldGroup#OrderDetails
+      position:        20 },
+    { id:              'ItemsFacet',
+      purpose:         #STANDARD,
+      type:            #LINEITEM_REFERENCE,
+      label:           'Items',
+      position:        30,
    
-   @UI: { lineItem:       [ { position: 20 } ],
-         selectionField: [{ position: 20 } ],
-         fieldGroup: [{ qualifier: 'HeaderOrders',
-         position: 10 }] }
-    OrderId;
-    
-    @EndUserText.label: 'Name'
-      @UI: { lineItem:       [ { position: 30 } ],
-     fieldGroup: [{ qualifier: 'HeaderOrders',
-     position: 30,
-     label: 'Name of the order' },
-     { qualifier: 'OrderDetails',
-     position: 10 }] }
-    Name;
-    
+      targetElement:   '_Item'} // Association to child items
+  ]
+
+  @UI.hidden: true // Keep hidden not needed on UI
+  OrderUuid;
+
+  @UI: {
+    lineItem:       [ { position: 10, label: 'Order ID' } ], // List Report column
+    selectionField: [ { position: 10 } ], // Filter bar field
+    // Add an identification annotation for the header facet to target
+    identification: [{ qualifier: 'HeaderOrders', position: 10, label: 'Order ID' }] // Target for HeaderOrders facet
+  }
+  OrderId;
+
+  @EndUserText.label: 'Order Name'
+  @UI: {
+    lineItem:       [ { position: 20, label: 'Name' } ], // List Report column
+    fieldGroup:     [ { qualifier: 'HeaderOrders', position: 20, label: 'Name of the Order' }, // Object Page Header Facet
+                      { qualifier: 'OrderDetails', position: 10, label: 'Name' } ] // Object Page Order Details section
+  }
+  Name;
+
   @EndUserText.label: 'Status'
-  @UI: { lineItem: [{ position: 30 } ],
-  fieldGroup: [{ qualifier: 'OrderDetails', position: 30, label: 'Status of Order' },
-  { qualifier: 'OrderDetails' },
+  @UI: {
+    lineItem:       [ { position: 30, label: 'Status' } ], // List Report column with criticality
+    selectionField: [ { position: 20 } ], // Filter bar field
+    fieldGroup:     [ { qualifier: 'OrderDetails', position: 30, label: 'Status' } ], // Object Page Order Details section
+    // Actions now associated with the Status field (for identification on OP)
+    identification: [
+      { position: 10, type: #FOR_ACTION, dataAction: 'orderCompleted', label: 'Complete Order' },
+      { position: 20, type: #FOR_ACTION, dataAction: 'orderCancelled', label: 'Cancel Order' },
+      { position: 30, type: #FOR_ACTION, dataAction: 'orderInProcess', label: 'Set In Process' }
+    ]
+  }
+  Status;
 
-  { type: #FOR_ACTION, dataAction: 'orderCompleted', label: 'Complete Order' },
-  { type: #FOR_ACTION,  dataAction: 'orderCancelled', label: 'Cancelled Order' },
-  { type: #FOR_ACTION,  dataAction: 'orderInProcess', label: 'In Process Order' }],
-  identification: [{ position: 90 },
-  { type: #FOR_ACTION, dataAction: 'orderCompleted', label: 'Complete Order' },
-  { type: #FOR_ACTION, dataAction: 'orderCancelled', label: 'Cancelled Order' },
-  { type: #FOR_ACTION, dataAction: 'orderInProcess', label: 'In Process Order' } ] }
-    Status;
-    
-    @EndUserText.label: 'Customer Name'
-      @UI: { lineItem:       [ { position: 30 } ],
-     fieldGroup: [{ qualifier: 'HeaderOrders',
-     position: 30,
-     label: 'Name of the order' },
-     { qualifier: 'OrderDetails',
-     position: 10 }] }
-    CustomerName;
-    
-  @EndUserText.label: 'Creation Date'
-      @UI: { lineItem:       [ { position: 30 } ],
-     fieldGroup: [{ qualifier: 'HeaderOrders',
-     position: 30,
-     label: 'Name of the order' },
-     { qualifier: 'OrderDetails',
-     position: 10 }] }
-    CreationDate;
-    
-   @EndUserText.label: 'Cancellation Date'
-      @UI: { lineItem:       [ { position: 30 } ],
-     fieldGroup: [{ qualifier: 'HeaderOrders',
-     position: 30,
-     label: 'Name of the order' },
-     { qualifier: 'OrderDetails',
-     position: 10 }] }
-    CancellationDate;
-    
-    @EndUserText.label: 'Completion Date'
-      @UI: { lineItem:       [ { position: 30 } ],
-     fieldGroup: [{ qualifier: 'HeaderOrders',
-     position: 30,
-     label: 'Name of the order' },
-     { qualifier: 'OrderDetails',
-     position: 10 }] }
-    CompletionDate;
-    
-   
-     @EndUserText.label: 'Delivery Country'
-      @UI: { lineItem:       [ { position: 30 } ],
-     fieldGroup: [{ qualifier: 'HeaderOrders',
-     position: 30,
-     label: 'Name of the order' },
-     { qualifier: 'OrderDetails',
-     position: 10 }] }
-    DeliveryCountry;
-   
-   @EndUserText.label: 'Total Price'
-      @UI: { lineItem:       [ { position: 30 } ],
-     fieldGroup: [{ qualifier: 'HeaderOrders',
-     position: 30,
-     label: 'Name of the order' },
-     { qualifier: 'OrderDetails',
-     position: 10 }] }
-    TotalPrice;
-    
- 
-     @EndUserText.label: 'Complexity'
-      @UI: { lineItem:       [ { position: 30 } ],
-     fieldGroup: [{ qualifier: 'HeaderOrders',
-     position: 30,
-     label: 'Name of the order' },
-     { qualifier: 'OrderDetails',
-     position: 10 }] }
-    Complexity;
+  @EndUserText.label: 'Customer'
+  @UI: {
+    lineItem:       [ { position: 50, label: 'Customer' } ], // List Report column
+    selectionField: [ { position: 40 } ], // Filter bar field
+    fieldGroup:     [ { qualifier: 'OrderDetails', position: 20, label: 'Customer' } ] // Object Page Order Details section
+  }
+  Customer;
 
+//  @EndUserText.label: 'Creation Date'
+//  @UI: {
+//    lineItem:       [ { position: 40, label: 'Creation Date' } ], // List Report column
+//    selectionField: [ { position: 30 } ], // Filter bar field
+//    fieldGroup:     [ { qualifier: 'OrderDetails', position: 50, label: 'Creation Date' } ] // Object Page Order Details section
+//  }
+ @UI.hidden: true
+  CreationDate;
+
+//  @EndUserText.label: 'Cancellation Date'
+//  @UI.fieldGroup: [ { qualifier: 'OrderDetails', position: 70, label: 'Cancellation Date' } ] // Object Page Order Details section
+ @UI.hidden: true
+  CancellationDate;
+
+//  @EndUserText.label: 'Completion Date'
+//  @UI.fieldGroup: [ { qualifier: 'OrderDetails', position: 60, label: 'Completion Date' } ] // Object Page Order Details section
+ @UI.hidden: true
+  CompletionDate;
+
+  @EndUserText.label: 'Delivery Country'
+  @UI.fieldGroup: [ { qualifier: 'OrderDetails', position: 40, label: 'Delivery Country' } ] // Object Page Order Details section
+ DeliveryCountry;
+
+  @EndUserText.label: 'Total Price'
+  @UI.fieldGroup: [ { qualifier: 'OrderDetails', position: 80, label: 'Total Price' } ] // Object Page Order Details section
+  TotalPrice;
+
+  @EndUserText.label: 'Currency'
+  @UI.fieldGroup: [ { qualifier: 'OrderDetails', position: 90, label: 'Currency' } ] // Object Page Order Details section
+  Currency;
+
+  @EndUserText.label: 'Complexity'
+  @UI.lineItem: [ { position: 60, label: 'Complexity' } ] // List Report column
+  Complexity;
+  
+    @UI.hidden: true  
+   LastChangedBy;
    
+     @UI.hidden: true  
+    LastChangedAt;
     
+      @UI.hidden: true  
+    LocalLastChangedAt;
+
 }

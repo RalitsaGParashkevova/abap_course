@@ -3,37 +3,50 @@
   headerInfo: { typeName: 'Item',
                 typeNamePlural: 'Items',
                 title: { type: #STANDARD, label: 'Item', value: 'ItemUuid' } },
-  presentationVariant: [{ sortOrder: [{ by: 'ItemUuid', direction:  #DESC }] }] }
-annotate entity ZRP_I_ITEM
-    with 
+  presentationVariant: [{ sortOrder: [{ by: 'ItemUuid', direction: #DESC }] }] }
+annotate view ZRP_C_ITEM
+    with
 {
-    @UI.facet: [ { id:            'Item',
-                 purpose:       #STANDARD,
-                 type:          #IDENTIFICATION_REFERENCE,
-                 label:         'Item',
-                 position:      10 }  ]
+  @UI.facet: [{ id: 'ItemIdentification', // Changed ID for clarity
+                purpose: #STANDARD,
+                type: #IDENTIFICATION_REFERENCE,
+                label: 'Items', // Changed label
+                position: 10
+              }]
 
-  @UI: { identification: [ { position: 10, label: 'Item UUID'  } ] }
-ItemUuid;
- @UI: { lineItem:       [ { position: 20 } ],
+  @UI.hidden: true // Keep hidden if not needed on UI, often ItemUuid is hidden on sub-tables
+ // @UI.identification: [ { position: 10, label: 'Item UUID' } ] // For Item's own object page
+  ItemUuid;
+
+  @UI.hidden: true // Hide from direct UI display, as it's the parent key
+ // @UI.identification: [ { position: 20, label: 'Order UUID' } ] // For Item's own object page
+  OrderUuid;
+
+  @EndUserText.label: 'Item Name'
+@UI: { lineItem:       [ { position: 10 } ],
+         identification: [ { position: 10 } ] }
+  Name;
+
+  @EndUserText.label: 'Price'
+@UI: { lineItem:       [ { position: 20 } ],
          identification: [ { position: 20 } ] }
-OrderUuid;
+  Price;
 
- @UI: { lineItem:       [ { position: 40 } ],
-         identification: [ { position: 40 } ] }
-Name;
-
- @UI: { lineItem:       [ { position: 30 } ],
-         identification: [ { position: 30 } ] }
- Price;
- 
+  @EndUserText.label: 'Currency'
+  //@UI.lineItem: [ { position: 30, label: 'Currency' } ] // <-- ADDED: For Items table column
+  @UI.identification: [ { position: 50, label: 'Currency' } ] // For Item's own object page
+  Currency;
+  
+  
+ @EndUserText.label: 'Item Quantity'
   @UI: { lineItem:       [ { position: 30 } ],
          identification: [ { position: 30 } ] }
- Currency;
- 
-  @UI: { lineItem:       [ { position: 30 } ],
-         identification: [ { position: 30 } ] }
- Quantity;
-    
-    
+  Quantity;
+  
+    @UI.hidden: true  
+     LastChangedBy;
+       @UI.hidden: true  
+    LastChangedAt;
+      @UI.hidden: true  
+    LocalLastChangedAt;
 }

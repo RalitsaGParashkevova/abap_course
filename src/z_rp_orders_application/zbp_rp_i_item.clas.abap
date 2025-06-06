@@ -1,15 +1,5 @@
-class ZBP_RP_I_ITEM definition
-  public
-  abstract
-  final
-  create public .
-
-public section.
-protected section.
-private section.
+CLASS zbp_rp_i_item DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF zrp_i_order.
 ENDCLASS.
 
-
-
-CLASS ZBP_RP_I_ITEM IMPLEMENTATION.
+CLASS zbp_rp_i_item IMPLEMENTATION.
 ENDCLASS.

@@ -1,14 +1,26 @@
-class ZRP_CL_ORDER_APPLICATION definition
-  public
-  final
-  create public .
+CLASS zrp_cl_order_application DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
 
-public section.
-protected section.
-private section.
+  PUBLIC SECTION.
+    INTERFACES if_oo_adt_classrun .
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS ZRP_CL_ORDER_APPLICATION IMPLEMENTATION.
+CLASS zrp_cl_order_application IMPLEMENTATION.
+  METHOD if_oo_adt_classrun~main.
+
+
+DELETE FROM ZRP_ORDERS.
+  out->write( 'Delete all items.' ).
+DELETE FROM zrp_items.
+  out->write( 'Delete all items.' ).
+
+COMMIT WORK AND WAIT.
+  ENDMETHOD.
+
 ENDCLASS.

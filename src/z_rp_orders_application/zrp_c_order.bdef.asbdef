@@ -1,7 +1,9 @@
-projection;
+projection implementation in class zbp_rp_i_order unique;
+strict ( 2 );
 use draft;
+
 define behavior for ZRP_C_ORDER alias Orders
-//use etag
+use etag
 {
   use create;
   use update;
@@ -9,16 +11,22 @@ define behavior for ZRP_C_ORDER alias Orders
 
   use association _Item { create; with draft; }
 
-  use action orderCancelled;
-  use action orderCompleted;
-  use action orderInProcess;
+  use action cancelOrder;
+  use action completeOrder;
 
+use action Edit;
+use action Activate;
+use action Discard;
+use action Resume;
+
+ use action Prepare;
 
 }
 
 define behavior for ZRP_C_ITEM alias Item
-//use etag
+use etag
 {
+
   use update;
   use delete;
 

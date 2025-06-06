@@ -10,7 +10,7 @@
 }
 define view entity ZRP_I_ORDER_COMPLEXITY as select from zrp_items
 {
-    order_uuid,
+   key order_uuid,
    count(distinct item_uuid) as ItemCount
 }
 group by order_uuid

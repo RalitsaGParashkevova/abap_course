@@ -29,6 +29,7 @@ association [1..1] to ZRP_I_ORDER_COMPLEXITY as _Complexity on $projection.Order
     last_changed_at as LastChangedAt,
     @Semantics.systemDateTime.localInstanceLastChangedAt: true
     local_last_changed_at as LocalLastChangedAt,
+  
      _Complexity.ItemCount as ItemCount,
     case 
 when _Complexity.ItemCount < 3 
@@ -38,6 +39,7 @@ then 'Medium'
 else
 'Complex'
 end as Complexity,
+
     
     /* Associations */
    // Make association public

@@ -1,0 +1,9 @@
+@EndUserText.label: 'Service Definition for ZRP_C_ORDER'
+define service ZRP_UI_ORDERS {
+  expose ZRP_C_ORDER            as Orders;
+  expose ZRP_C_ITEM             as Items;
+  expose /DMO/I_Customer        as Customer;
+  expose I_Currency             as Currency;
+  expose I_Country              as Country;
+  expose ZRP_I_ORDER_COMPLEXITY as Complexity;
+}

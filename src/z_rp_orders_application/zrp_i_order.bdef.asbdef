@@ -1,4 +1,5 @@
 managed;
+strict ( 2 );
 with draft;
 
 define behavior for ZRP_I_ORDER alias Orders
@@ -10,31 +11,57 @@ authorization master ( instance )
 etag master LocalLastChangedAt
 {
   create ( authorization : global );
-  update;
-  delete;
+  update ( features : instance );
+  delete ( features : instance );
 
+ association _Item { create; with draft; }
+
+// Key and managed fields
   field ( numbering : managed, readonly ) OrderUuid;
+  // System-managed fields (read-only after creation)
   field ( readonly ) Status, CreationDate, CompletionDate, CancellationDate, TotalPrice;
   field ( readonly ) LastChangedBy, LastChangedAt, LocalLastChangedAt;
-  field ( mandatory ) Customer, DeliveryCountry;
-  association _Item { create;with draft; }
+    // Mandatory fields for creation and updates
+  field ( mandatory:create ) Customer, DeliveryCountry, Name, Currency;
 
-  action ( features : instance ) orderCompleted result [1] $self;
-  action ( features : instance ) orderCancelled result [1] $self;
-  action ( features : instance ) orderInProcess result [1] $self;
-  internal action calculateTotalPrice;
 
+
+  action ( features : instance ) inProcessOrder result [1] $self;
+  action ( features : instance ) completeOrder result [1] $self;
+  action ( features : instance ) cancelOrder result [1] $self;
+
+
+draft action Edit;
+draft action Activate optimized;
+draft action Discard;
+draft action Resume;
+internal action reCalculateTotalPrice;
+
+determination calculateTotalPrice on modify { create; }
   determination setInitialStatus on modify { create; }
+
   determination incrementOrderId on save { create; }
-  determination insertCreationDate on save { create; }
 
 
-validation orderValidation on save { field ItemCount; create; }
-validation customerValidation on save { field Customer; create; }
-validation orderName on save { field Name; create; }
-validation deliveryCountry on save { field DeliveryCountry; create; }
-validation currency on save { field Currency; create; }
-validation validateDates on save { field CreationDate, CancellationDate, CompletionDate; create; }
+
+
+validation validateOrderItems on save { create;update; }
+validation validateCustomer on save { field Customer; create;update; }
+
+validation validateOrderName on save { field Name; create;update; }
+validation validateOrderPrice on save { field Name; create;update; }
+validation validateOrderQuantity on save { field Name; create;update; }
+
+
+ draft determine action Prepare {
+ validation validateOrderItems;
+ validation validateCustomer;
+
+ validation validateOrderName;
+ validation validateOrderPrice;
+ validation validateOrderQuantity;
+
+ }
 
 
   mapping for zrp_orders
@@ -54,7 +81,6 @@ validation validateDates on save { field CreationDate, CancellationDate, Complet
   LastChangedAt        = last_changed_at;
   LocalLastChangedAt   = local_last_changed_at;
 
-
   }
 }
 
@@ -67,19 +93,27 @@ authorization dependent by _Order
 etag master LocalLastChangedAt
 {
 
-  update;
+
+  update ;
   delete;
+
 
   association _Order { with draft; }
 
-   field ( numbering : managed, readonly ) ItemUuid;
+     field ( numbering : managed, readonly ) ItemUuid;
      field ( readonly ) OrderUuid;
      field ( readonly ) LastChangedBy, LastChangedAt, LocalLastChangedAt;
+     field ( mandatory:create ) Name, Price, Currency, Quantity;
+
+//validation   validateItemName          on save   { field Name; create; }
+//validation   validateQuantity          on save   { field Quantity; create; }
+//validation   validateItemPrice         on save   { field Price; create; }
+
 
      mapping for zrp_items
   {
   ItemUUID  = item_uuid;
-  OrderUUID = order_uuid;
+  OrderUuid = order_uuid;
   Name      = name;
   Price     = price;
   Currency  = currency;

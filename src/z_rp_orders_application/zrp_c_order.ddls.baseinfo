@@ -3,7 +3,6 @@
 {
 "FROM":
 [
-"I_COUNTRY",
 "ZRP_I_ORDER",
 "/DMO/CUSTOMER"
 ],
