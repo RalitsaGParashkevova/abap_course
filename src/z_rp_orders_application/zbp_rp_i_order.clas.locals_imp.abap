@@ -269,10 +269,9 @@ CLASS lhc_Orders IMPLEMENTATION.
   FIELDS ( OrderId ) WITH CORRESPONDING #( keys )
   RESULT DATA(orders).
 
-   " remove lines where OrderID is already filled.
-    DELETE orders WHERE OrderId IS NOT INITIAL.
+   DELETE orders WHERE OrderId IS NOT INITIAL.
 
-    CHECK orders IS NOT INITIAL.
+   CHECK orders IS NOT INITIAL.
 
     " Select max travel ID
     SELECT SINGLE

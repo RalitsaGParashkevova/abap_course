@@ -31,7 +31,9 @@ define root view entity ZRP_C_ORDER
     LastChangedBy,
     LastChangedAt,
     LocalLastChangedAt,
-    Complexity,
+   @ObjectModel.virtualElementCalculatedBy: 'ABAP:ZRP_CL_COMPLEXITY'
+    @EndUserText.label: 'Complexity'
+ virtual  Complexity : abap.sstring( 10 ),
     /* Associations */
     _Currency,
     _Customer,

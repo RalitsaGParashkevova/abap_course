@@ -53,7 +53,7 @@ annotate view ZRP_C_ORDER with
   @UI: {
     lineItem:       [ { position: 30, label: 'Status' } ], // List Report column with criticality
     selectionField: [ { position: 20 } ], // Filter bar field
-    fieldGroup:     [ { qualifier: 'OrderDetails', position: 30, label: 'Status' } ], // Object Page Order Details section
+    fieldGroup:     [ { qualifier: 'OrderDetails', position: 30 } ], // Object Page Order Details section
     // Actions now associated with the Status field (for identification on OP)
     identification: [
       { position: 10, type: #FOR_ACTION, dataAction: 'orderCompleted', label: 'Complete Order' },
@@ -67,7 +67,7 @@ annotate view ZRP_C_ORDER with
   @UI: {
     lineItem:       [ { position: 50, label: 'Customer' } ], // List Report column
     selectionField: [ { position: 40 } ], // Filter bar field
-    fieldGroup:     [ { qualifier: 'OrderDetails', position: 20, label: 'Customer' } ] // Object Page Order Details section
+    fieldGroup:     [ { qualifier: 'OrderDetails', position: 20 } ] // Object Page Order Details section
   }
   Customer;
 
@@ -81,25 +81,25 @@ annotate view ZRP_C_ORDER with
   CreationDate;
 
 //  @EndUserText.label: 'Cancellation Date'
-//  @UI.fieldGroup: [ { qualifier: 'OrderDetails', position: 70, label: 'Cancellation Date' } ] // Object Page Order Details section
+//  @UI.fieldGroup: [ { qualifier: 'OrderDetails', position: 70 } ] // Object Page Order Details section
  @UI.hidden: true
   CancellationDate;
 
 //  @EndUserText.label: 'Completion Date'
-//  @UI.fieldGroup: [ { qualifier: 'OrderDetails', position: 60, label: 'Completion Date' } ] // Object Page Order Details section
+//  @UI.fieldGroup: [ { qualifier: 'OrderDetails', position: 60 } ] // Object Page Order Details section
  @UI.hidden: true
   CompletionDate;
 
   @EndUserText.label: 'Delivery Country'
-  @UI.fieldGroup: [ { qualifier: 'OrderDetails', position: 40, label: 'Delivery Country' } ] // Object Page Order Details section
+  @UI.fieldGroup: [ { qualifier: 'OrderDetails', position: 40 } ] // Object Page Order Details section
  DeliveryCountry;
 
   @EndUserText.label: 'Total Price'
-  @UI.fieldGroup: [ { qualifier: 'OrderDetails', position: 80, label: 'Total Price' } ] // Object Page Order Details section
+  @UI.fieldGroup: [ { qualifier: 'OrderDetails', position: 80 } ] // Object Page Order Details section
   TotalPrice;
 
   @EndUserText.label: 'Currency'
-  @UI.fieldGroup: [ { qualifier: 'OrderDetails', position: 90, label: 'Currency' } ] // Object Page Order Details section
+  @UI.fieldGroup: [ { qualifier: 'OrderDetails', position: 90 } ] // Object Page Order Details section
   Currency;
 
   @EndUserText.label: 'Complexity'

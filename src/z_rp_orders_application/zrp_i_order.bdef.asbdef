@@ -22,7 +22,7 @@ etag master LocalLastChangedAt
   field ( readonly ) Status, CreationDate, CompletionDate, CancellationDate, TotalPrice;
   field ( readonly ) LastChangedBy, LastChangedAt, LocalLastChangedAt;
     // Mandatory fields for creation and updates
-  field ( mandatory:create ) Customer, DeliveryCountry, Name, Currency;
+  field ( mandatory ) Customer, DeliveryCountry, Name, Currency;
 
 
 
